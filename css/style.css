@@ -1,14 +1,7 @@
-/* ===================================
-   🌌 GLOBAL STYLES
-=================================== */
-body {
+body { 
   background-color: #212529;
   color: #fff;
-  margin: 0;
-  font-family: "Poppins", sans-serif;
-  padding-top: 70px; 
 }
-
 /* ===================================
    🧭 Top Navigation Bar
 =================================== */
@@ -35,8 +28,8 @@ body {
 }
 
 .logo {
-  width: 62px;
-  height: 62px;
+  width: 35px;
+  height: 35px;
   border-radius: 50%;
 }
 
@@ -69,6 +62,18 @@ body {
   color: #fff;
 }
 
+.boss-card {
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  background: #3f464e;
+  padding: 20px;
+  margin-bottom: 15px;
+}
+.countdown { font-size: 18px; font-weight: 600; color: #0d6efd; }
+p.countdown {
+  margin-bottom: 0 !important;
+}
+
 .modal-header .modal-title {
   color: #000;
 }
@@ -77,28 +82,33 @@ body {
   color: #000;
 }
 
-/* ===================================
-   📄 CONTENT
-=================================== */
-.content {
-  margin-left: 250px;
-  padding: 30px;
-}
-
 .text-uppercase {
   text-transform: uppercase;
 }
 
-/* ===================================
-   🧱 BOSS CARD BASE
-=================================== */
+/* === Boss Spawn Status Colors === */
 .boss-card {
-  border-radius: 12px;
-  background: #3f464e;
-  padding: 20px;
-  margin-bottom: 15px;
   transition: background-color 0.5s ease, transform 0.2s ease;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  padding: 10px;
+  border-radius: 10px;
+  margin: 10px;
+}
+ 
+
+.boss-default {
+  background-color: #2b2b2b;
+  color: white;
+}
+
+.boss-soon {
+  background-color: #ffcc00;
+  color: #000;
+}
+
+.boss-spawning {
+  background-color: #ff3b3b;
+  color: white;
+  transform: scale(1.02);
 }
 
 .boss-card .badge {
@@ -106,30 +116,35 @@ body {
   font-size: 0.9em;
 }
 
-.countdown {
-  font-size: 18px;
-  font-weight: 600;
-  color: #0d6efd;
-  margin-bottom: 0 !important;
-}
-
-/* ===================================
-   ⚡ STATUS COLORS
-=================================== */
-.boss-default { background-color: #2b2b2b; color: white; }
-.boss-soon { background-color: #ffcc00; color: #000; }
-.boss-spawning { background-color: #ff3b3b; color: white; transform: scale(1.02); }
-
-/* ===================================
-   🛡️ GUILD BADGE COLORS
-=================================== */
+/* Small circular guild indicator */
 .guild-badge {
-  color: white;
-  background-color: #007bff;
+  display: inline-block;
   padding: 2px 6px;
-  border-radius: 5px;
+  width: max-content;
+  border-radius: 10px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #fff;
+  background-color: #808080;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 
+#btnRepopulate {
+  background-color: #28a745;
+  border: none;
+  color: white;
+  font-weight: 500;
+}
+#btnRepopulate:hover {
+  background-color: #218838;
+}
+
+#bossListSection {
+  margin-top: 65px;
+}
+
+/* Color variants */
 .guild-badge.Cloud9 { background-color: #00bfff; }
 .guild-badge.Midnight { background-color: #15388577; }
 .guild-badge.HellSing { background-color: #ff3b3b; }
@@ -138,9 +153,6 @@ body {
 .guild-badge.FFA { background-color: #808080; }
 .guild-badge.Faction { background-color: #8f5186; }
 
-/* ===================================
-   🗂️ SECTION LABELS
-=================================== */
 .boss-section-label {
   font-size: 1.2rem;
   font-weight: 700;
@@ -148,31 +160,35 @@ body {
   border-bottom: 2px solid rgba(255,255,255,0.1);
 }
 
-/* ===================================
-   🧩 GRID LAYOUT (with animation)
-=================================== */
+
+
+/* ===== Dashboard Layout ===== */
 .boss-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(4, 1fr);
   gap: 1rem;
   margin: 10px auto;
   padding: 0 10px;
   overflow: hidden;
+  max-height: none;
   opacity: 1;
-  transition: 
-    max-height 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94),
-    opacity 0.4s ease;
+  transition: max-height 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.4s ease;
 }
 
 .boss-grid.collapsed {
   max-height: 0;
   opacity: 0;
+  overflow: hidden;
 }
 
-.boss-grid.expanding,
+.boss-grid.expanding {
+  overflow: hidden;
+}
+
 .boss-grid.collapsing {
   overflow: hidden;
 }
+
 
 /* ===================================
    🧱 BOSS TILE DESIGN
@@ -181,7 +197,10 @@ body {
   background: #fff;
   border-radius: 12px;
   overflow: hidden;
+  background: rgb(49, 48, 48);
+  box-shadow: rgba(0, 0, 0, 0.1) 0px 4px 10px;
   display: flex;
+  flex-direction: row;
   align-items: center;
   height: 140px;
   box-shadow: 0 4px 10px rgba(0,0,0,0.15);
@@ -196,19 +215,30 @@ body {
 
 /* Boss Image */
 /* Responsive Enhancements */
-.boss-tile img {
-  width: 100%;
-  height: auto;
+.boss-tile-img {
+  width: 100px;
+  height: 100%;
   object-fit: cover;
+  border-right: 4px solid rgba(0,0,0,0.05);
 }
 
 /* Info Section */
+.boss-tile-info {
+  flex: 1 1 0%;
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+
 .boss-tile h3 {
   font-size: 17px;
   font-weight: 700;
   margin: 2px 0;
   color: #f0f0f0;
 }
+
 
 .boss-tile .countdown {
   font-size: 0.85em;
@@ -222,9 +252,63 @@ body {
   color: #ffffff;
 }
 
-/* ===================================
-   🪄 SECTION HEADER COLLAPSE ANIMATION
-=================================== */
+/* ===== Responsive Boss Tiles ===== */
+@media (max-width: 992px) {
+  .boss-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  main {
+    margin-top: 50px;
+  }
+
+  .boss-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .boss-tile {
+    flex-direction: column;
+    height: auto;
+  }
+
+  .boss-tile-img {
+    width: 100%;
+    height: auto;            /* 👈 Let it scale naturally */
+    aspect-ratio: 16 / 9;    /* 👈 Keeps consistent rectangular shape */
+    object-fit: cover;       /* 👈 Prevents squishing */
+    border-right: none;
+    border-bottom: 4px solid rgba(0,0,0,0.05);
+  }
+}
+
+@media (max-width: 480px) {
+  .boss-tile-img {
+    height: 140px;
+  }
+
+  .guild-badge {
+    font-size: 0.6rem;
+    padding: 2px 5px;
+  }
+}
+
+/* ===== Guild Badge Colors ===== */
+.guild-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  background-color: #007bff;
+  border-radius: 5px;
+  font-size: 0.75em;
+  font-weight: 600;
+  color: white;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+}
+
+
+/* ===== Section Header ===== */
 h2.section-header {
   font-weight: 800;
   font-size: 1.3rem;
@@ -235,156 +319,14 @@ h2.section-header {
   cursor: pointer;
   padding: 8px 12px;
   border-radius: 6px;
-  background: rgba(0, 0, 0, 0.1);
+  background: rgba(0, 0, 0, 0.05);
   user-select: none;
-  transition: background 0.3s ease, transform 0.3s ease;
-}
-
-h2.section-header:hover {
-  background: rgba(255, 255, 255, 0.05);
-  transform: scale(1.02);
 }
 
 h2.section-header span {
-  transition: transform 0.4s ease;
+  display: inline-block;
+  transition: transform 0.3s ease;
 }
-
-h2.section-header.collapsed span {
-  transform: rotate(-90deg);
-}
-
-/* ===================================
-   📱 RESPONSIVE DESIGN
-=================================== */
-
-/* Mobile */
-@media (max-width: 600px) {
-  .boss-tile {
-    flex-direction: column;
-    height: auto;
-  }
-}
-
-/* Tablet */
-@media (min-width: 600px) and (max-width: 899px) {
-  .boss-grid { grid-template-columns: repeat(2, 1fr); gap: 1rem; }
-  .boss-tile img { width: 120px; }
-  .boss-tile h3 { font-size: 16px; }
-}
-
-/* Small Desktop */
-@media (min-width: 900px) and (max-width: 1399px) {
-  .boss-grid { grid-template-columns: repeat(3, 1fr); }
-  .boss-tile img { width: 100px; }
-}
-
-/* Large Screen */
-@media (min-width: 1400px) {
-  .boss-grid { grid-template-columns: repeat(4, 1fr); }
-}
-
-
-/* 📱 MOBILE VIEW: Single column stacked card */
-@media (max-width: 599px) {
-  .content {
-    margin-left: 0;
-    padding: 15px;
-  }
-
-  .boss-grid {
-    grid-template-columns: 1fr;
-    gap: 0.8rem;
-  }
-
-  .boss-tile {
-    flex-direction: column;
-    align-items: flex-start;
-    width: 100%;
-    height: auto;
-    padding: 0;
-    border-radius: 14px;
-    overflow: hidden;
-  }
-
-  .boss-tile img {
-    width: 100%;
-    height: 160px;
-    object-fit: cover;
-    border: none;
-    border-bottom: 4px solid rgba(0,0,0,0.15);
-  }
-
-  .boss-tile .info {
-    padding: 12px 14px;
-    width: 100%;
-  }
-
-  .boss-tile h3 {
-    font-size: 1rem;
-    margin: 4px 0;
-  }
-
-  .boss-tile p,
-  .boss-tile .countdown {
-    font-size: 0.85rem;
-    margin: 2px 0;
-  }
-
-  .guild-badge {
-    font-size: 0.7em;
-    margin-top: 4px;
-  }
-}
-
-/* 💻 TABLET VIEW: Two cards per row, compact style */
-@media (min-width: 600px) and (max-width: 1199px) {
-  .boss-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1rem;
-  }
-
-  .boss-tile {
-    flex-direction: row;
-    height: 120px;
-  }
-
-  .boss-tile img {
-    width: 100px;
-  }
-
-  .boss-tile h3 {
-    font-size: 0.95rem;
-  }
-
-  .boss-tile p,
-  .boss-tile .countdown {
-    font-size: 0.8rem;
-  }
-}
-
-/* 🖥️ DESKTOP VIEW: Four cards per row (default) */
-@media (min-width: 1200px) {
-  .boss-grid {
-    grid-template-columns: repeat(4, 1fr);
-  }
-}
-
-
-/* === Main Content Wrapper === */
-/* main {
-  margin: 0 auto;               
-  padding: 1rem 2rem;           
-  display: flex;
-  flex-direction: column;
-  align-items: center;           
-} */
-
-/* === Section Layout === */
-/* #dashboardSection,
-#bossListContainer {
-  width: 100%;
-  max-width: 1300px;           
-} */
 
 main {
   margin: 0 auto;
@@ -411,7 +353,247 @@ main {
 
 .card .card-body, .card p, .card h3 {
   text-align: left;
-
 }
 
+/* Hamburger button - hidden on large screens */
+.nav-toggle {
+  display: none;
+  background: none;
+  border: none;
+  font-size: 1.8rem;
+  color: #fff;
+  cursor: pointer;
+}
 
+/* Mobile styles */
+@media (max-width: 768px) {
+  .nav-toggle {
+    display: block;
+  }
+
+  .nav-links {
+    display: none; /* hide menu initially */
+    flex-direction: column;
+    width: 100%;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+  }
+
+  .nav-links.show {
+    display: flex; /* show when active */
+  }
+}
+
+/* ===================================
+   📱 Responsive Design
+=================================== */
+
+/* Tablets (≤ 992px) */
+@media (max-width: 992px) {
+  main {
+    margin-top: var(--nav-height, 60px);
+    padding: 1.5rem;
+  }
+  .topnav {
+    --nav-height: 60px;
+  }
+
+  h2.section-header {
+    font-size: 1rem;
+    padding: 6px 10px;
+    border-radius: 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 6px;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  h2.section-header span {
+    transform-origin: center;
+    font-size: 0.9rem;
+    margin-left: auto; /* keeps arrow aligned right */
+  }
+
+  /* Optional: make emoji + text aligned cleanly */
+  h2.section-header::before {
+    font-size: 1.1rem;
+  }
+
+  .boss-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .nav-links {
+    gap: 0.5rem;
+  }
+
+  .nav-links li a {
+    padding: 6px 10px;
+    font-size: 0.9rem;
+  }
+
+  main {
+    padding: 1rem;
+  }
+}
+
+/* Mobile Landscape (≤ 768px) */
+@media (max-width: 768px) {
+  main {
+    margin-top: var(--nav-height, 80px);
+    padding: 1.5rem;
+  }
+  .topnav {
+    --nav-height: 60px;
+  }
+
+  h2.section-header {
+    font-size: 1rem;
+    padding: 6px 10px;
+    border-radius: 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 6px;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  h2.section-header span {
+    transform-origin: center;
+    font-size: 0.9rem;
+    margin-left: auto; /* keeps arrow aligned right */
+  }
+
+  /* Optional: make emoji + text aligned cleanly */
+  h2.section-header::before {
+    font-size: 1.1rem;
+  }
+
+  .topnav {
+    flex-direction: column;
+    align-items: flex-start;
+    height: auto;
+    padding: 0.5rem 1rem;
+  }
+
+  .nav-links {
+    flex-direction: column;
+    width: 100%;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+  }
+
+  .nav-links li a {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 10px;
+    border-radius: 4px;
+  }
+
+  .boss-grid {
+    grid-template-columns: 1fr;
+    gap: 0.8rem;
+  }
+
+  .boss-tile {
+    flex-direction: column;
+    align-items: flex-start;
+    height: auto;
+  }
+
+  .boss-tile img {
+    width: 100%;
+    height: auto;            /* 👈 Let it scale naturally */
+    aspect-ratio: 16 / 9;    /* 👈 Keeps consistent rectangular shape */
+    object-fit: cover;       /* 👈 Prevents squishing */
+    border-right: none;
+    border-bottom: 4px solid rgba(0, 0, 0, 0.05);
+  }
+
+  .boss-tile h3 {
+    font-size: 1rem;
+  }
+
+  .boss-tile p,
+  .countdown {
+    font-size: 0.85rem;
+  }
+
+  h2.section-header {
+    font-size: 1.1rem;
+    padding: 6px 10px;
+  }
+}
+
+/* Mobile Portrait (≤ 480px) */
+@media (max-width: 480px) {
+  main {
+    margin-top: var(--nav-height, 60px);
+    padding: 1.5rem;
+  }
+  .topnav {
+    --nav-height: 60px;
+  }
+
+  h2.section-header {
+    font-size: 1rem;
+    padding: 6px 10px;
+    border-radius: 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 6px;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  h2.section-header span {
+    transform-origin: center;
+    font-size: 0.9rem;
+    margin-left: auto; /* keeps arrow aligned right */
+  }
+
+  /* Optional: make emoji + text aligned cleanly */
+  h2.section-header::before {
+    font-size: 1.1rem;
+  }
+
+  body {
+    font-size: 0.9rem;
+  }
+
+  .brand {
+    font-size: 1rem;
+  }
+
+  .logo {
+    width: 28px;
+    height: 28px;
+  }
+
+  .boss-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .boss-tile h3 {
+    color: #f0f0f0;
+  }
+
+  .boss-tile img {
+    height: auto;
+    aspect-ratio: 1 / 1;
+  }
+
+  .guild-badge {
+    font-size: 0.6rem;
+    padding: 2px 5px;
+  }
+
+  #btnRepopulate {
+    width: 100%;
+  }
+}
