@@ -1,11 +1,63 @@
 import { db } from "./firebase.js";
 import { ref, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
+/* ======================
+   🔹 TIMEZONE SYSTEM
+====================== */
+let displayTimezone = localStorage.getItem("displayTimezone") || "PH";
+const countdownTimers = new Map(); // 🔹 store intervals to prevent duplicates
+
+function toUTC7(date) {
+  // Converts any date to UTC+7
+  const utc = date.getTime() + date.getTimezoneOffset() * 60000;
+  return new Date(utc + 7 * 60 * 60000);
+}
+
+function nowWithTimezone() {
+  return displayTimezone === "utc7" ? toUTC7(new Date()) : new Date();
+}
+
+function convertWithTimezone(date) {
+  return displayTimezone === "utc7" ? toUTC7(date) : date;
+}
+
+function formatWithTimezone(date) { const d = convertWithTimezone(date); return d.toLocaleString([], { dateStyle: "short", timeStyle: "short" }); }
+
+// function formatWithTimezone(date) {
+//   const d = convertWithTimezone(date);
+//   const options = { dateStyle: "short", timeStyle: "short" };
+//   if (displayTimezone === "utc7") options.timeZone = "Asia/Bangkok"; // UTC+7
+//   return d.toLocaleString([], options);
+// }
+
+function formatCountdown(targetDate) {
+  const diff = targetDate - nowWithTimezone();
+  if (diff <= 0) return "00 hrs : 00 mns : 00 secs";
+
+  const hours = Math.floor(diff / (1000 * 60 * 60));
+  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+  const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+  return `${hours.toString().padStart(2, "0")} hrs : ${minutes
+    .toString()
+    .padStart(2, "0")} mns : ${seconds.toString().padStart(2, "0")} secs`;
+}
+
+/* ======================
+   🔹 NAV ELEMENTS
+====================== */
 const navDashboard = document.getElementById("navDashboard");
 const navBossList = document.getElementById("navBossList");
 const dashboardSection = document.getElementById("dashboardSection");
 const bossListContainer = document.getElementById("bossListContainer");
 const dashboardCards = document.getElementById("dashboardCards");
+
+const navToggle = document.querySelector(".nav-toggle");
+const navLinks = document.querySelector(".nav-links");
+
+navToggle.addEventListener("click", () => {
+  navLinks.classList.toggle("show");
+});
 
 let isAuthorized = false;
 
@@ -43,13 +95,13 @@ navBossList.addEventListener("click", async () => {
   if (!document.getElementById("bossListSection")) {
     const html = await (await fetch("bosslist.html")).text();
     bossListContainer.innerHTML = html;
-    const module = await import("./bosslist.js");
-    module.initBossList();
+    const { initBossList } = await import("./bosslist.js");
+    initBossList();
   }
 });
 
 /* ======================
-   🔹 HELPER FUNCTIONS
+   🔹 SCHEDULE LOGIC
 ====================== */
 function getNextScheduledSpawn(scheduleStr) {
   if (!scheduleStr) return null;
@@ -62,25 +114,18 @@ function getNextScheduledSpawn(scheduleStr) {
     const [dayStr, timeStr] = entry.split(" ");
     const dayIndex = daysOfWeek.findIndex(d => d.toLowerCase() === dayStr.toLowerCase());
     if (dayIndex === -1 || !timeStr) continue;
+
     const [hour, minute] = timeStr.split(":").map(Number);
     let candidate = new Date(now);
     candidate.setHours(hour, minute, 0, 0);
+
     const diffDays = (dayIndex - candidate.getDay() + 7) % 7;
     candidate.setDate(candidate.getDate() + diffDays);
-    if (candidate <= now) candidate.setDate(candidate.getDate() + 7);
+    if (candidate < now) candidate.setDate(candidate.getDate() + 7); // ✅ use < now
+
     if (!soonest || candidate < soonest) soonest = candidate;
   }
   return soonest;
-}
-
-function formatCountdown(targetDate) {
-  const now = new Date();
-  const diff = targetDate - now;
-  if (diff <= 0) return "00 hrs : 00 mns : 00 secs";
-  const hours = Math.floor(diff / (1000 * 60 * 60));
-  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-  const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-  return `${hours.toString().padStart(2, "0")} hrs : ${minutes.toString().padStart(2, "0")} mns : ${seconds.toString().padStart(2, "0")} secs`;
 }
 
 /* ======================
@@ -111,7 +156,7 @@ async function fetchAndRenderBosses() {
 
     bosses.sort((a, b) => a._ts - b._ts);
 
-    const now = new Date();
+    const now = nowWithTimezone();
     const today = now.getDate();
     const tomorrow = new Date(now);
     tomorrow.setDate(now.getDate() + 1);
@@ -119,19 +164,13 @@ async function fetchAndRenderBosses() {
     const groups = { soon: [], today: [], tomorrow: [], later: [] };
 
     bosses.forEach(b => {
-      const nextDate = new Date(b._ts);
-      const diff = nextDate - now;
+      const nextDate = convertWithTimezone(new Date(b._ts));
+      const diff = nextDate - nowWithTimezone();
 
-      // ✅ Stay in "Spawning Soon" if within 10 min before OR 5 min after spawn
-      if (diff <= 10 * 60000 && diff > -5 * 60000) {
-        groups.soon.push(b);
-      } else if (nextDate.getDate() === today) {
-        groups.today.push(b);
-      } else if (nextDate.getDate() === tomorrow.getDate()) {
-        groups.tomorrow.push(b);
-      } else {
-        groups.later.push(b);
-      }
+      if (diff <= 10 * 60000 && diff > -5 * 60000) groups.soon.push(b);
+      else if (nextDate.getDate() === today) groups.today.push(b);
+      else if (nextDate.getDate() === tomorrow.getDate()) groups.tomorrow.push(b);
+      else groups.later.push(b);
     });
 
     dashboardCards.innerHTML = "";
@@ -139,7 +178,7 @@ async function fetchAndRenderBosses() {
     const sections = [
       { label: "🕑 Spawning", color: "#66ff00ff", data: groups.soon },
       { label: "🌞 Today", color: "#007bff", data: groups.today },
-      { label: "🌙 Tomorrow", color: "#9163e7", data: groups.tomorrow },
+      { label: "🌙 Tomorrow", color: "#6f42c1", data: groups.tomorrow },
       { label: "🌅 Coming Soon", color: "#e98e07ff", data: groups.later },
     ];
 
@@ -175,40 +214,36 @@ async function fetchAndRenderBosses() {
       grid.style.padding = "0 10px";
       grid.style.overflow = "hidden";
       grid.style.transition = "max-height 0.4s ease, opacity 0.4s ease";
-      grid.dataset.sectionColor = section.color; // 🔹 store the section color for later use
+      grid.dataset.sectionColor = section.color;
 
       section.data.forEach(b => grid.appendChild(createBossCard(b, section.color)));
 
       header.addEventListener("click", () => {
-        if (grid.classList.contains("animating")) return; // prevent spam clicks
+        if (grid.classList.contains("animating")) return;
         grid.classList.add("animating");
 
         const isCollapsed = grid.classList.contains("collapsed");
 
         if (isCollapsed) {
-          // --- EXPAND ---
           grid.classList.remove("collapsed");
           grid.style.display = "grid";
           const fullHeight = grid.scrollHeight + "px";
           grid.style.maxHeight = "0px";
-          grid.offsetHeight; // force reflow
+          grid.offsetHeight;
           grid.style.maxHeight = fullHeight;
           grid.style.opacity = "1";
           toggle.style.transform = "rotate(0deg)";
-
           setTimeout(() => {
             grid.style.maxHeight = "none";
             grid.classList.remove("animating");
           }, 400);
         } else {
-          // --- COLLAPSE ---
           const fullHeight = grid.scrollHeight + "px";
-          grid.style.maxHeight = fullHeight; // start from current height
-          grid.offsetHeight; // force reflow
+          grid.style.maxHeight = fullHeight;
+          grid.offsetHeight;
           grid.style.maxHeight = "0px";
           grid.style.opacity = "0";
           toggle.style.transform = "rotate(-90deg)";
-
           setTimeout(() => {
             grid.classList.add("collapsed");
             grid.classList.remove("animating");
@@ -216,7 +251,6 @@ async function fetchAndRenderBosses() {
           }, 400);
         }
       });
-
 
       sectionContainer.appendChild(header);
       sectionContainer.appendChild(grid);
@@ -231,31 +265,41 @@ async function fetchAndRenderBosses() {
   function createBossCard(b, sectionColor = "#007bff") {
     const card = document.createElement("div");
     card.className = "boss-tile";
-    card.style.display = "flex";
-    card.style.flexDirection = "row";
-    card.style.alignItems = "center";
-    card.style.background = "#313030ff";
-    card.style.borderRadius = "12px";
-    card.style.overflow = "hidden";
-    card.style.boxShadow = "0 4px 10px rgba(0,0,0,0.1)";
-    card.style.height = "140px";
-    card.style.transition = "transform 0.2s ease";
     card.style.borderLeft = `6px solid ${sectionColor}`;
 
-    card.addEventListener("mouseenter", () => card.style.transform = "scale(1.03)");
-    card.addEventListener("mouseleave", () => card.style.transform = "scale(1)");
+    card.addEventListener("mouseenter", () => (card.style.transform = "scale(1.03)"));
+    card.addEventListener("mouseleave", () => (card.style.transform = "scale(1)"));
 
     const bossImageMap = {
-      VENATUS: "img/venatus.png", VIORENT: "img/viorent.png", EGO: "img/ego.png",
-      LIVERA: "img/livera_fool.png", ARANEO: "img/araneo.png", NEUTRO: "img/neutro_fool.png",
-      SAPHIRUS: "img/saphirus.png", THYMELE: "img/thymele.png", UNDOMIEL: "img/undomiel.png",
-      WANNITAS: "img/wannitas.png", DUPLICAN: "img/duplican.png", METUS: "img/metus_fool.png",
-      AMENTIS: "img/amentis.png", CLEMANTIS: "img/clemantis.png", TITORE: "img/titore.png",
-      GARETH: "img/gareth.png", LADYDALIA: "img/lady_dalia.png", GENAQULUES: "img/gen_aquleus.png",
-      GENERALAQULES: "img/gen_aquleus.png", AURAQ: "img/auraq_fool.png", MILAVY: "img/milavy.png",
-      CHAIFLOCK: "img/chaiflock.png", RODERICK: "img/roderick_fool.png", RINGOR: "img/ringor_fool.png",
-      BENJI: "img/benji_fool.png", SHULIAR: "img/shuliar.png", LARBA: "img/larba_fool.png",
-      GENAQULEUS: "img/gen_aquleus.png", BARON: "img/baron_fool.png",
+      VENATUS: "img/venatus.png",
+      VIORENT: "img/viorent.png",
+      EGO: "img/ego.png",
+      LIVERA: "img/livera.gif",
+      ARANEO: "img/araneo.png",
+      NEUTRO: "img/neutro.gif",
+      SAPHIRUS: "img/saphirus.png",
+      THYMELE: "img/thymele.png",
+      UNDOMIEL: "img/undomiel.png",
+      WANNITAS: "img/wannitas.png",
+      DUPLICAN: "img/duplican.png",
+      METUS: "img/metus.gif",
+      AMENTIS: "img/amentis.png",
+      CLEMANTIS: "img/clemantis.png",
+      TITORE: "img/titore.png",
+      GARETH: "img/gareth.png",
+      LADYDALIA: "img/lady_dalia.png",
+      GENAQULUES: "img/gen_aquleus.png",
+      GENERALAQULES: "img/gen_aquleus.png",
+      AURAQ: "img/auraq.gif",
+      MILAVY: "img/milavy.png",
+      CHAIFLOCK: "img/chaiflock.png",
+      RODERICK: "img/roderick_fool.png",
+      RINGOR: "img/ringor.png",
+      BENJI: "img/benji_fool.png",
+      SHULIAR: "img/shuliar.png",
+      LARBA: "img/larba.gif",
+      GENAQULEUS: "img/gen_aquleus.png",
+      BARON: "img/baron.gif",
     };
 
     const normalizedName = b.bossName?.toUpperCase().replace(/[^A-Z0-9]/g, "") || "";
@@ -264,90 +308,97 @@ async function fetchAndRenderBosses() {
     const img = document.createElement("img");
     img.src = imgSrc;
     img.alt = b.bossName;
-    img.style.width = "100px";
-    img.style.height = "100%";
-    img.style.objectFit = "cover";
-    img.style.borderRight = "4px solid rgba(0,0,0,0.05)";
+    img.className = "boss-tile-img";
     card.appendChild(img);
-    
 
     const info = document.createElement("div");
-    info.className = "info"; // ✅ ADD THIS
-    info.style.flex = "1";
-    info.style.padding = "10px 14px";
-    // info.style.display = "flex";
-    info.style.flexDirection = "column";
-    info.style.justifyContent = "center";
+    info.className = "boss-tile-info";
+    card.appendChild(info);
 
     const guild = b.guild || "FFA";
     const guildTag = document.createElement("span");
     guildTag.textContent = guild;
     guildTag.className = `guild-badge ${guild}`;
-    guildTag.style.display = "inline-block";
-    guildTag.style.padding = "2px 8px";
-    guildTag.style.borderRadius = "6px";
-    guildTag.style.fontSize = "0.75em";
-    guildTag.style.fontWeight = "600";
-    guildTag.style.marginBottom = "4px";
     info.appendChild(guildTag);
 
     const title = document.createElement("h3");
     title.textContent = b.bossName || "Unknown";
-    title.style.fontWeight = "700";
-    title.style.fontSize = "17px";
     info.appendChild(title);
 
-    const nextDate = b._ts !== Infinity ? new Date(b._ts) : null;
-    const spawnDisplay = nextDate
-      ? nextDate.toLocaleString([], { dateStyle: "short", timeStyle: "short" })
-      : "--";
-
+    const nextDate = b._ts !== Infinity ? convertWithTimezone(new Date(b._ts)) : null;
     const countdown = document.createElement("span");
     countdown.className = "countdown";
-    countdown.style.fontWeight = "700";
-    countdown.style.fontSize = ".85em";
     info.appendChild(countdown);
 
     const spawnInfo = document.createElement("p");
-    spawnInfo.innerHTML = `<span style="color:#666; font-weight:bold">Spawn:</span> <strong>${spawnDisplay}</strong>`;
-    spawnInfo.style.fontSize = "0.9em";
+    spawnInfo.innerHTML = `<span style="color:#666; font-weight:bold">Spawn:</span> <strong>${formatWithTimezone(new Date(b._ts))}</strong>`;
     info.appendChild(spawnInfo);
 
-    card.appendChild(info);
-
     if (nextDate) {
-      const originalColor = sectionColor;
-      setInterval(() => {
-        const diff = nextDate - new Date();
+      // ✅ clear old interval if exists
+      if (countdownTimers.has(b._key)) clearInterval(countdownTimers.get(b._key));
+
+      const interval = setInterval(() => {
+        const liveNextDate = convertWithTimezone(new Date(b._ts));
+        const diff = liveNextDate - nowWithTimezone();
+
         if (diff <= 0 && diff > -5 * 60000) {
           countdown.textContent = "SPAWNING NOW!";
           countdown.style.color = "red";
           card.style.borderLeftColor = "red";
         } else if (diff > 0 && diff <= 10 * 60000) {
-          countdown.textContent = formatCountdown(nextDate);
+          countdown.textContent = formatCountdown(liveNextDate);
           countdown.style.color = "#ff9900";
           card.style.borderLeftColor = "#ff9900";
         } else if (diff > 0) {
-          // 🟦 Normal upcoming spawn
-          countdown.textContent = formatCountdown(nextDate);
-          countdown.style.color = originalColor; // ✅ match section color
-          card.style.borderLeftColor = originalColor; // ✅ restore section color
-        }else {
+          countdown.textContent = formatCountdown(liveNextDate);
+          countdown.style.color = sectionColor;
+          card.style.borderLeftColor = sectionColor;
+        } else {
           countdown.textContent = "Spawn Passed";
           countdown.style.color = "#777";
           card.style.borderLeftColor = "#777";
         }
       }, 1000);
+
+      countdownTimers.set(b._key, interval);
     }
+
     return card;
   }
 }
 
-window.addEventListener("load", fetchAndRenderBosses);
-document.addEventListener("visibilitychange", () => { if (!document.hidden) fetchAndRenderBosses(); });
+/* ======================
+   🔹 INIT AFTER DOM READY
+====================== */
+window.addEventListener("DOMContentLoaded", () => {
+  const btnTimezone = document.getElementById("btnTimezone");
+  if (btnTimezone) {
+    function updateTimezoneButton() {
+      btnTimezone.textContent =
+        displayTimezone === "utc7"
+          ? "🌍 Timezone: UTC+7"
+          : "🌍 Timezone: PH";
+    }
 
+    updateTimezoneButton();
 
+    btnTimezone.addEventListener("click", () => {
+      displayTimezone = displayTimezone === "local" ? "utc7" : "local";
+      localStorage.setItem("displayTimezone", displayTimezone);
+      updateTimezoneButton();
 
+      // Clear all existing intervals to prevent duplicates
+      countdownTimers.forEach(clearInterval);
+      countdownTimers.clear();
 
+      fetchAndRenderBosses();
+    });
+  }
 
+  fetchAndRenderBosses();
+});
 
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) fetchAndRenderBosses();
+});
