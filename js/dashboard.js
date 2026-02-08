@@ -271,35 +271,16 @@ async function fetchAndRenderBosses() {
     card.addEventListener("mouseleave", () => (card.style.transform = "scale(1)"));
 
     const bossImageMap = {
-      VENATUS: "img/venatus.png",
-      VIORENT: "img/viorent.png",
-      EGO: "img/ego.png",
-      LIVERA: "img/livera.gif",
-      ARANEO: "img/araneo.png",
-      NEUTRO: "img/neutro.gif",
-      SAPHIRUS: "img/saphirus.png",
-      THYMELE: "img/thymele.png",
-      UNDOMIEL: "img/undomiel.png",
-      WANNITAS: "img/wannitas.png",
-      DUPLICAN: "img/duplican.png",
-      METUS: "img/metus.gif",
-      AMENTIS: "img/amentis.png",
-      CLEMANTIS: "img/clemantis.png",
-      TITORE: "img/titore.png",
-      GARETH: "img/gareth.png",
-      LADYDALIA: "img/lady_dalia.png",
-      GENAQULUES: "img/gen_aquleus.png",
-      GENERALAQULES: "img/gen_aquleus.png",
-      AURAQ: "img/auraq.gif",
-      MILAVY: "img/milavy.png",
-      CHAIFLOCK: "img/chaiflock.png",
-      RODERICK: "img/roderick_fool.png",
-      RINGOR: "img/ringor.png",
-      BENJI: "img/benji_fool.png",
-      SHULIAR: "img/shuliar.png",
-      LARBA: "img/larba.gif",
-      GENAQULEUS: "img/gen_aquleus.png",
-      BARON: "img/baron.gif",
+      VENATUS: "img/venatus.png", VIORENT: "img/viorent.png", EGO: "img/ego.png",
+      LIVERA: "img/livera_fool.png", ARANEO: "img/araneo.png", NEUTRO: "img/neutro_fool.png",
+      SAPHIRUS: "img/saphirus.png", THYMELE: "img/thymele.png", UNDOMIEL: "img/undomiel.png",
+      WANNITAS: "img/wannitas.png", DUPLICAN: "img/duplican.png", METUS: "img/metus_fool.png",
+      AMENTIS: "img/amentis.png", CLEMANTIS: "img/clemantis.png", TITORE: "img/titore.png",
+      GARETH: "img/gareth.png", LADYDALIA: "img/lady_dalia.png", GENAQULUES: "img/gen_aquleus.png",
+      GENERALAQULES: "img/gen_aquleus.png", AURAQ: "img/auraq_fool.png", MILAVY: "img/milavy.png",
+      CHAIFLOCK: "img/chaiflock.png", RODERICK: "img/roderick_fool.png", RINGOR: "img/ringor_fool.png",
+      BENJI: "img/benji_fool.png", SHULIAR: "img/shuliar.png", LARBA: "img/larba_fool.png",
+      GENAQULEUS: "img/gen_aquleus.png", BARON: "img/baron_fool.png"
     };
 
     const normalizedName = b.bossName?.toUpperCase().replace(/[^A-Z0-9]/g, "") || "";
@@ -402,3 +383,4 @@ window.addEventListener("DOMContentLoaded", () => {
 document.addEventListener("visibilitychange", () => {
   if (!document.hidden) fetchAndRenderBosses();
 });
+
