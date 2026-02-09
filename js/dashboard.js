@@ -2,36 +2,62 @@ import { db } from "./firebase.js";
 import { ref, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
 /* ======================
-   🔹 TIMEZONE SYSTEM
+   🔹 TIMEZONE SYSTEM (FIXED)
 ====================== */
-let displayTimezone = localStorage.getItem("displayTimezone") || "PH";
-const countdownTimers = new Map(); // 🔹 store intervals to prevent duplicates
+// 🔹 Default display offset (hours)
+let displayOffset = 8; // default UTC+8
+const timezoneSelect = document.getElementById("timezoneSelect");
+let tzIndex = 0;
 
-function toUTC7(date) {
-  // Converts any date to UTC+7
-  const utc = date.getTime() + date.getTimezoneOffset() * 60000;
-  return new Date(utc + 7 * 60 * 60000);
+// const timezones = [
+//   { label: "UTC+8", offset: 8 },
+//   { label: "UTC+7", offset: 7 },
+//   { label: "UTC+4", offset: 4 },
+// ];
+
+const btnTimezone = document.getElementById("btnTimezone");
+
+const countdownTimers = new Map();
+// Always use real current time (never converted)
+function nowUTC() {
+  return new Date();
 }
 
-function nowWithTimezone() {
-  return displayTimezone === "utc7" ? toUTC7(new Date()) : new Date();
+// Format spawn time for display
+function formatWithTimezone(date) {
+  const offset = parseFloat(displayOffset); // just the chosen UTC offset
+  const utcTime = date.getTime() + date.getTimezoneOffset() * 60000;
+  const localTime = new Date(utcTime + offset * 3600000);
+
+  return localTime.toLocaleString([], {
+    dateStyle: "short",
+    timeStyle: "short",
+    hour12: true,
+  });
 }
 
-function convertWithTimezone(date) {
-  return displayTimezone === "utc7" ? toUTC7(date) : date;
-}
+// Countdown always uses real timestamps
+// function formatCountdown(targetDate) {
+//   const diff = targetDate - nowUTC();
+//   if (diff <= 0) return "00 hrs : 00 mns : 00 secs";
 
-function formatWithTimezone(date) { const d = convertWithTimezone(date); return d.toLocaleString([], { dateStyle: "short", timeStyle: "short" }); }
+//   const hours = Math.floor(diff / (1000 * 60 * 60));
+//   const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+//   const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
-// function formatWithTimezone(date) {
-//   const d = convertWithTimezone(date);
-//   const options = { dateStyle: "short", timeStyle: "short" };
-//   if (displayTimezone === "utc7") options.timeZone = "Asia/Bangkok"; // UTC+7
-//   return d.toLocaleString([], options);
+//   return `${hours.toString().padStart(2, "0")} hrs : ${minutes
+//     .toString()
+//     .padStart(2, "0")} mns : ${seconds.toString().padStart(2, "0")} secs`;
 // }
 
 function formatCountdown(targetDate) {
-  const diff = targetDate - nowWithTimezone();
+  const offset = parseFloat(displayOffset); // e.g., 7, 8
+  const utcNow = nowUTC().getTime();
+  
+  // shift current time to the selected timezone
+  const localNow = utcNow + (offset - 8) * 3600_000; // 8 = original PH offset
+  const diff = targetDate.getTime() - localNow;
+
   if (diff <= 0) return "00 hrs : 00 mns : 00 secs";
 
   const hours = Math.floor(diff / (1000 * 60 * 60));
@@ -156,7 +182,7 @@ async function fetchAndRenderBosses() {
 
     bosses.sort((a, b) => a._ts - b._ts);
 
-    const now = nowWithTimezone();
+    const now = nowUTC();
     const today = now.getDate();
     const tomorrow = new Date(now);
     tomorrow.setDate(now.getDate() + 1);
@@ -164,8 +190,8 @@ async function fetchAndRenderBosses() {
     const groups = { soon: [], today: [], tomorrow: [], later: [] };
 
     bosses.forEach(b => {
-      const nextDate = convertWithTimezone(new Date(b._ts));
-      const diff = nextDate - nowWithTimezone();
+      const nextDate = new Date(b._ts);
+      const diff = nextDate - nowUTC();
 
       if (diff <= 10 * 60000 && diff > -5 * 60000) groups.soon.push(b);
       else if (nextDate.getDate() === today) groups.today.push(b);
@@ -280,8 +306,7 @@ async function fetchAndRenderBosses() {
       GENERALAQULES: "img/gen_aquleus.png", AURAQ: "img/auraq_fool.png", MILAVY: "img/milavy.png",
       CHAIFLOCK: "img/chaiflock.png", RODERICK: "img/roderick_fool.png", RINGOR: "img/ringor_fool.png",
       BENJI: "img/benji_fool.png", SHULIAR: "img/shuliar.png", LARBA: "img/larba_fool.png",
-      GENAQULEUS: "img/gen_aquleus.png", BARON: "img/baron_fool.png"
-    };
+      GENAQULEUS: "img/gen_aquleus.png", BARON: "img/baron_fool.png",};
 
     const normalizedName = b.bossName?.toUpperCase().replace(/[^A-Z0-9]/g, "") || "";
     const imgSrc = bossImageMap[normalizedName] || "img/default.png";
@@ -306,7 +331,7 @@ async function fetchAndRenderBosses() {
     title.textContent = b.bossName || "Unknown";
     info.appendChild(title);
 
-    const nextDate = b._ts !== Infinity ? convertWithTimezone(new Date(b._ts)) : null;
+    const nextDate = b._ts !== Infinity ? new Date(b._ts) : null;
     const countdown = document.createElement("span");
     countdown.className = "countdown";
     info.appendChild(countdown);
@@ -320,8 +345,8 @@ async function fetchAndRenderBosses() {
       if (countdownTimers.has(b._key)) clearInterval(countdownTimers.get(b._key));
 
       const interval = setInterval(() => {
-        const liveNextDate = convertWithTimezone(new Date(b._ts));
-        const diff = liveNextDate - nowWithTimezone();
+        const liveNextDate = new Date(b._ts);
+        const diff = liveNextDate - nowUTC();
 
         if (diff <= 0 && diff > -5 * 60000) {
           countdown.textContent = "SPAWNING NOW!";
@@ -353,34 +378,28 @@ async function fetchAndRenderBosses() {
    🔹 INIT AFTER DOM READY
 ====================== */
 window.addEventListener("DOMContentLoaded", () => {
-  const btnTimezone = document.getElementById("btnTimezone");
-  if (btnTimezone) {
-    function updateTimezoneButton() {
-      btnTimezone.textContent =
-        displayTimezone === "utc7"
-          ? "🌍 Timezone: UTC+7"
-          : "🌍 Timezone: PH";
-    }
+  // Clear all existing intervals to prevent duplicates
+  countdownTimers.forEach(clearInterval);
+  countdownTimers.clear();
 
-    updateTimezoneButton();
+  fetchAndRenderBosses();
+});
 
-    btnTimezone.addEventListener("click", () => {
-      displayTimezone = displayTimezone === "local" ? "utc7" : "local";
-      localStorage.setItem("displayTimezone", displayTimezone);
-      updateTimezoneButton();
+// On load
+const savedOffset = localStorage.getItem("displayOffset");
+if (savedOffset) {
+  displayOffset = savedOffset === "local" ? "local" : parseFloat(savedOffset);
+  timezoneSelect.value = savedOffset;
+}
 
-      // Clear all existing intervals to prevent duplicates
-      countdownTimers.forEach(clearInterval);
-      countdownTimers.clear();
-
-      fetchAndRenderBosses();
-    });
-  }
-
+// On change
+timezoneSelect.addEventListener("change", () => {
+  const val = timezoneSelect.value;
+  displayOffset = val === "local" ? "local" : parseFloat(val);
+  localStorage.setItem("displayOffset", val);
   fetchAndRenderBosses();
 });
 
 document.addEventListener("visibilitychange", () => {
   if (!document.hidden) fetchAndRenderBosses();
 });
-
