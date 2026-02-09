@@ -21,9 +21,15 @@
       ☰
     </button>
 
-    <button id="btnTimezone" class="btn btn-sm btn-dark" style="margin-bottom:10px; visibility: hidden;">
-      🌍 Timezone: PH
-    </button>
+    <!-- <button id="btnTimezone" class="btn btn-sm btn-dark" style="margin-bottom:10px;">
+      🌍 Timezone: UTC+8
+    </button> -->
+
+    <select id="timezoneSelect" class="form-select form-select-sm mb-3" style="width: 150px;">
+      <option value="8" selected>UTC+8</option>
+      <option value="7">UTC+7</option>
+      <option value="4">UTC+4</option>
+    </select>
 
     <ul class="nav-links">
       <li><a id="navDashboard" href="#" class="active">Dashboard</a></li>
