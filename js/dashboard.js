@@ -368,7 +368,7 @@ async function fetchAndRenderBosses() {
           !b.warned10m
         ) {
           sendDiscordMessage(
-            `@everyone ⚠️ **${b.bossName} spawning @ proximately 10 minutes!**`
+            `@everyone ⚠️ **${b.bossName} spawning @ approximately 10 minutes!**`
           );
         }
 
@@ -434,6 +434,7 @@ timezoneSelect.addEventListener("change", () => {
 document.addEventListener("visibilitychange", () => {
   if (!document.hidden) fetchAndRenderBosses();
 });
+
 
 
 
