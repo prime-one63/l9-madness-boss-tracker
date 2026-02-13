@@ -359,6 +359,7 @@ async function fetchAndRenderBosses() {
       const interval = setInterval(() => {
         const liveNextDate = new Date(b._ts);
         const diff = liveNextDate - nowUTC();
+        const tenMin = 10 * 60000; // ✅ ADD THIS LINE
 
          // 🔔 DISCORD ADD — 10 MIN WARNING
         if (
@@ -433,4 +434,5 @@ timezoneSelect.addEventListener("change", () => {
 document.addEventListener("visibilitychange", () => {
   if (!document.hidden) fetchAndRenderBosses();
 });
+
 
