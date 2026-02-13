@@ -2,15 +2,15 @@ import { db } from "./firebase.js";
 import { ref, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
 
-const DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1471289464637755426/ZksHMuTzLZ_AAe_PJzVpFdxQOm_2Vb_IfAOXlCS3tYCdeYTRdBxh5SXlt_TBahgEglDo";
+// const DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1471289464637755426/ZksHMuTzLZ_AAe_PJzVpFdxQOm_2Vb_IfAOXlCS3tYCdeYTRdBxh5SXlt_TBahgEglDo";
 
-function sendDiscordMessage(msg) {
-  fetch(DISCORD_WEBHOOK, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ content: msg })
-  });
-}
+// function sendDiscordMessage(msg) {
+//   fetch(DISCORD_WEBHOOK, {
+//     method: "POST",
+//     headers: { "Content-Type": "application/json" },
+//     body: JSON.stringify({ content: msg })
+//   });
+// }
 
 
 /* ======================
@@ -362,15 +362,15 @@ async function fetchAndRenderBosses() {
         const tenMin = 10 * 60000; // ✅ ADD THIS LINE
 
          // 🔔 DISCORD ADD — 10 MIN WARNING
-        if (
-          diff <= tenMin &&
-          diff > tenMin - 1000 &&
-          !b.warned10m
-        ) {
-          sendDiscordMessage(
-            `@everyone ⚠️ **${b.bossName} spawning @ approximately 10 minutes!**`
-          );
-        }
+        // if (
+        //   diff <= tenMin &&
+        //   diff > tenMin - 1000 &&
+        //   !b.warned10m
+        // ) {
+        //   sendDiscordMessage(
+        //     `@everyone ⚠️ **${b.bossName} spawning @ approximately 10 minutes!**`
+        //   );
+        // }
 
         // // 🔔 DISCORD ADD — SPAWN PING
         // if (diff <= 0 && !b.spawnedPinged) {
@@ -434,6 +434,7 @@ timezoneSelect.addEventListener("change", () => {
 document.addEventListener("visibilitychange", () => {
   if (!document.hidden) fetchAndRenderBosses();
 });
+
 
 
 
