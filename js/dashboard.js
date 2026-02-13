@@ -1,6 +1,18 @@
 import { db } from "./firebase.js";
 import { ref, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
+
+const DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1471289464637755426/ZksHMuTzLZ_AAe_PJzVpFdxQOm_2Vb_IfAOXlCS3tYCdeYTRdBxh5SXlt_TBahgEglDo";
+
+function sendDiscordMessage(msg) {
+  fetch(DISCORD_WEBHOOK, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ content: msg })
+  });
+}
+
+
 /* ======================
    🔹 TIMEZONE SYSTEM (FIXED)
 ====================== */
@@ -348,6 +360,24 @@ async function fetchAndRenderBosses() {
         const liveNextDate = new Date(b._ts);
         const diff = liveNextDate - nowUTC();
 
+         // 🔔 DISCORD ADD — 10 MIN WARNING
+        if (
+          diff <= tenMin &&
+          diff > tenMin - 1000 &&
+          !b.warned10m
+        ) {
+          sendDiscordMessage(
+            `@everyone ⚠️ **${b.bossName} spawning @ proximately 10 minutes!**`
+          );
+        }
+
+        // 🔔 DISCORD ADD — SPAWN PING
+        if (diff <= 0 && !b.spawnedPinged) {
+          sendDiscordMessage(
+            `@everyone 🔥 **${b.bossName} has spawned!**`
+          );
+        }
+
         if (diff <= 0 && diff > -5 * 60000) {
           countdown.textContent = "SPAWNING NOW!";
           countdown.style.color = "red";
@@ -403,3 +433,4 @@ timezoneSelect.addEventListener("change", () => {
 document.addEventListener("visibilitychange", () => {
   if (!document.hidden) fetchAndRenderBosses();
 });
+
