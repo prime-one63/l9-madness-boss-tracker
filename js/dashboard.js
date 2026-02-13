@@ -372,12 +372,12 @@ async function fetchAndRenderBosses() {
           );
         }
 
-        // 🔔 DISCORD ADD — SPAWN PING
-        if (diff <= 0 && !b.spawnedPinged) {
-          sendDiscordMessage(
-            `@everyone 🔥 **${b.bossName} has spawned!**`
-          );
-        }
+        // // 🔔 DISCORD ADD — SPAWN PING
+        // if (diff <= 0 && !b.spawnedPinged) {
+        //   sendDiscordMessage(
+        //     `@everyone 🔥 **${b.bossName} has spawned!**`
+        //   );
+        // }
 
         if (diff <= 0 && diff > -5 * 60000) {
           countdown.textContent = "SPAWNING NOW!";
@@ -434,5 +434,6 @@ timezoneSelect.addEventListener("change", () => {
 document.addEventListener("visibilitychange", () => {
   if (!document.hidden) fetchAndRenderBosses();
 });
+
 
 
