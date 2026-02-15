@@ -1,17 +1,16 @@
 import { db } from "./firebase.js";
-import { ref, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { ref, get, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
 
-// const DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1471289464637755426/ZksHMuTzLZ_AAe_PJzVpFdxQOm_2Vb_IfAOXlCS3tYCdeYTRdBxh5SXlt_TBahgEglDo";
+const DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1472168882579050587/hp1EcuK8qfchY9phVxlUqXZ_8ZhjKcLvbpD1aFy-gSLG1DKdOyT5uT1PCyAA4FyVpZBW";
 
-// function sendDiscordMessage(msg) {
-//   fetch(DISCORD_WEBHOOK, {
-//     method: "POST",
-//     headers: { "Content-Type": "application/json" },
-//     body: JSON.stringify({ content: msg })
-//   });
-// }
-
+function sendDiscordMessage(msg) {
+  fetch(DISCORD_WEBHOOK, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ content: msg })
+  });
+}
 
 /* ======================
    🔹 TIMEZONE SYSTEM (FIXED)
@@ -20,14 +19,6 @@ import { ref, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-da
 let displayOffset = 8; // default UTC+8
 const timezoneSelect = document.getElementById("timezoneSelect");
 let tzIndex = 0;
-
-// const timezones = [
-//   { label: "UTC+8", offset: 8 },
-//   { label: "UTC+7", offset: 7 },
-//   { label: "UTC+4", offset: 4 },
-// ];
-
-const btnTimezone = document.getElementById("btnTimezone");
 
 const countdownTimers = new Map();
 // Always use real current time (never converted)
@@ -48,37 +39,18 @@ function formatWithTimezone(date) {
   });
 }
 
-// Countdown always uses real timestamps
-// function formatCountdown(targetDate) {
-//   const diff = targetDate - nowUTC();
-//   if (diff <= 0) return "00 hrs : 00 mns : 00 secs";
+function formatCountdown(targetMs) {
+  if (!targetMs) return "00 hrs : 00 mns : 00 secs";
 
-//   const hours = Math.floor(diff / (1000 * 60 * 60));
-//   const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-//   const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-
-//   return `${hours.toString().padStart(2, "0")} hrs : ${minutes
-//     .toString()
-//     .padStart(2, "0")} mns : ${seconds.toString().padStart(2, "0")} secs`;
-// }
-
-function formatCountdown(targetDate) {
-  const offset = parseFloat(displayOffset); // e.g., 7, 8
-  const utcNow = nowUTC().getTime();
-  
-  // shift current time to the selected timezone
-  const localNow = utcNow + (offset - 8) * 3600_000; // 8 = original PH offset
-  const diff = targetDate.getTime() - localNow;
+  const diff = targetMs - Date.now();
 
   if (diff <= 0) return "00 hrs : 00 mns : 00 secs";
 
-  const hours = Math.floor(diff / (1000 * 60 * 60));
-  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-  const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+  const hours = Math.floor(diff / 3600000);
+  const minutes = Math.floor((diff % 3600000) / 60000);
+  const seconds = Math.floor((diff % 60000) / 1000);
 
-  return `${hours.toString().padStart(2, "0")} hrs : ${minutes
-    .toString()
-    .padStart(2, "0")} mns : ${seconds.toString().padStart(2, "0")} secs`;
+  return `${hours.toString().padStart(2,"0")} hrs : ${minutes.toString().padStart(2,"0")} mns : ${seconds.toString().padStart(2,"0")} secs`;
 }
 
 /* ======================
@@ -318,7 +290,9 @@ async function fetchAndRenderBosses() {
       GENERALAQULES: "img/gen_aquleus.png", AURAQ: "img/auraq_fool.png", MILAVY: "img/milavy.png",
       CHAIFLOCK: "img/chaiflock.png", RODERICK: "img/roderick_fool.png", RINGOR: "img/ringor_fool.png",
       BENJI: "img/benji_fool.png", SHULIAR: "img/shuliar.png", LARBA: "img/larba_fool.png",
-      GENAQULEUS: "img/gen_aquleus.png", BARON: "img/baron_fool.png",};
+      GENAQULEUS: "img/gen_aquleus.png", BARON: "img/baron_fool.png", CATENA: "img/catena.png",
+      ORDO: "img/ordo.png", SECRETA: "img/secreta.png", SUPORE: "img/supore.png", ASTA: "img/asta.png",
+    };
 
     const normalizedName = b.bossName?.toUpperCase().replace(/[^A-Z0-9]/g, "") || "";
     const imgSrc = bossImageMap[normalizedName] || "img/default.png";
@@ -361,34 +335,126 @@ async function fetchAndRenderBosses() {
         const diff = liveNextDate - nowUTC();
         const tenMin = 10 * 60000; // ✅ ADD THIS LINE
 
-         // 🔔 DISCORD ADD — 10 MIN WARNING
-        // if (
-        //   diff <= tenMin &&
-        //   diff > tenMin - 1000 &&
-        //   !b.warned10m
-        // ) {
+        // // FOR TESTING ONLY
+        // if(diff > 0 && diff <= 13319000 && !b.spawnedPinged) {
+        //   console.log(b.bossName + ' = ' +diff);
+        //   console.log(b.bossName + ' = ' +tenMin);
+        //   console.log(b.bossName + ' = ' +b.warned10m);
+        //   console.log(b.bossName + ' = ' +b.spawnedPinged);
+
         //   sendDiscordMessage(
-        //     `@everyone ⚠️ **${b.bossName} spawning @ approximately 10 minutes!**`
+        //     `📢 @everyone\n` +
+        //     `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
+        //     `                                 🐦‍🔥**${b.bossName}**🐦‍🔥\n` +
+        //     `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
+        //     `🔥 Status: **SPAWNED!**\n` +
+        //     `📆 Time: <t:${Math.floor(Date.now()/1000)}:F>\n` +
+        //     `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` 
         //   );
+
+
+        //   update(ref(db, `bosses/${b._key}`), { spawnedPinged: true });
+        //   b.spawnedPinged = true; // ✅ CRITICAL LINE
         // }
 
-        // // 🔔 DISCORD ADD — SPAWN PING
-        // if (diff <= 0 && !b.spawnedPinged) {
-        //   sendDiscordMessage(
-        //     `@everyone 🔥 **${b.bossName} has spawned!**`
-        //   );
-        // }
+        // 🔔 DISCORD ADD — 10 MIN WARNING
+        if (diff > 0 && diff <= tenMin && !b.warned10m) {
+          sendDiscordMessage(
+            `📢 @everyone\n` +
+            `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
+            `                                 🐦‍🔥**${b.bossName}**🐦‍🔥\n` +
+            `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
+            `⏳ Status: **spawning at approximately 10 minutes!**\n` +
+            `📆 Time: <t:${Math.floor(Date.now()/1000)}:F>\n` +
+            `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` 
+          );
+
+          update(ref(db, `bosses/${b._key}`), { warned10m: true });
+          b.warned10m = true; // ✅ CRITICAL LINE
+        }
+
+        // 🔔 DISCORD ADD — SPAWN PING
+        if (diff <= 0 && diff > -1000 && !b.spawnedPinged) {
+          sendDiscordMessage(
+            `📢 @everyone\n` +
+            `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
+            `                                 🐦‍🔥**${b.bossName}**🐦‍🔥\n` +
+            `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
+            `🔥 Status: **SPAWNED!**\n` +
+            `📆 Time: <t:${Math.floor(Date.now()/1000)}:F>\n` +
+            `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` 
+          );
+
+          update(ref(db, `bosses/${b._key}`), { spawnedPinged: true });
+          b.spawnedPinged = true; // ✅ CRITICAL LINE
+        }
+
+        // 🔁 FIXED SCHEDULE → MOVE TO NEXT CYCLE
+        if (
+          b.bossSchedule &&
+          !b.bossHour &&
+          diff <= -5 * 60000 &&
+          !b.cycleReset
+        ) {
+          const nextDate = getNextScheduledSpawn(b.bossSchedule);
+
+          if (nextDate) {
+            update(ref(db, `bosses/${b._key}`), {
+              nextSpawn: nextDate.toISOString(),
+              warned10m: false,
+              spawnedPinged: false,
+              cycleReset: true
+            });
+
+            // local memory (anti-spam)
+            b.warned10m = false;
+            b.spawnedPinged = false;
+            b.cycleReset = true;
+          }
+        }
+
+        // 🔁 AUTO RESET 5 MIN AFTER SPAWN
+        if (diff <= -5 * 60000 && !b.cycleReset) {
+          let newNext;
+
+          if (b.bossHour) {
+            newNext = new Date(Date.now() + b.bossHour * 60 * 60 * 1000);
+          } else if (b.bossSchedule) {
+            newNext = getNextScheduledSpawn(b.bossSchedule);
+          }
+
+          if (newNext) {
+            update(ref(db, `bosses/${b._key}`), {
+              nextSpawn: newNext.toISOString(),
+              warned10m: false,
+              spawnedPinged: false,
+              cycleReset: true
+            });
+
+            // ✅ sync local memory
+            b._ts = newNext.getTime();
+            b.warned10m = false;
+            b.spawnedPinged = false;
+            b.cycleReset = true;
+          }
+        }
+
+        // clear cycle flag for next round
+        if (diff > 0 && b.cycleReset) {
+          update(ref(db, `bosses/${b._key}`), { cycleReset: false });
+          b.cycleReset = false;
+        }
 
         if (diff <= 0 && diff > -5 * 60000) {
           countdown.textContent = "SPAWNING NOW!";
           countdown.style.color = "red";
           card.style.borderLeftColor = "red";
         } else if (diff > 0 && diff <= 10 * 60000) {
-          countdown.textContent = formatCountdown(liveNextDate);
+          countdown.textContent = formatCountdown(b._ts);
           countdown.style.color = "#ff9900";
           card.style.borderLeftColor = "#ff9900";
         } else if (diff > 0) {
-          countdown.textContent = formatCountdown(liveNextDate);
+          countdown.textContent = formatCountdown(b._ts);
           countdown.style.color = sectionColor;
           card.style.borderLeftColor = sectionColor;
         } else {
@@ -434,8 +500,3 @@ timezoneSelect.addEventListener("change", () => {
 document.addEventListener("visibilitychange", () => {
   if (!document.hidden) fetchAndRenderBosses();
 });
-
-
-
-
-
