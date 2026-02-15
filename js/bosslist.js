@@ -380,6 +380,10 @@ export function initBossList() {
         await update(bossRef, {
           lastKilled: now.toISOString(),
           nextSpawn: nextSpawnTime.toISOString(),
+          spawnedPinged: false,
+          warned10m: false,
+          spawnedPinged: false,
+          cycleReset: true,
         });
 
         monitorBosses();
@@ -420,5 +424,6 @@ export function initBossList() {
   // Expose manual repopulate
   window.repopulateWeeklyScheduleBosses = repopulateWeeklyScheduleBosses;
 }
+
 
 
