@@ -1,5 +1,5 @@
 import { db } from "./firebase.js";
-import { ref, get, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { ref, get, update, runTransaction } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
 
 const DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1472575564278792315/0aWAkyjPJGm2bw54SigGFWrYpuhxNc732aInWhHFQik-jruDqvyBczI5hsayEBCyJHlW";
@@ -512,5 +512,6 @@ timezoneSelect.addEventListener("change", () => {
 document.addEventListener("visibilitychange", () => {
   if (!document.hidden) fetchAndRenderBosses();
 });
+
 
 
