@@ -392,6 +392,7 @@ async function fetchAndRenderBosses() {
         // 🔁 FIXED SCHEDULE → MOVE TO NEXT CYCLE
         if (
           b.bossSchedule &&
+          b.spawnedPinged === true &&
           diff <= -5 * 60000 &&     // 5 minutes after spawn
           !b.cycleReset
         ) {
@@ -418,6 +419,7 @@ async function fetchAndRenderBosses() {
         // 🔁 AUTO RESET 5 MIN AFTER SPAWN
         if (
           b.bossHour &&
+          b.spawnedPinged === true &&
           diff <= -5 * 60000 &&
           !b.cycleReset
         ) {
@@ -498,3 +500,4 @@ timezoneSelect.addEventListener("change", () => {
 document.addEventListener("visibilitychange", () => {
   if (!document.hidden) fetchAndRenderBosses();
 });
+
