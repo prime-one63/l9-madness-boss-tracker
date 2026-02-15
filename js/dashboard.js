@@ -392,8 +392,7 @@ async function fetchAndRenderBosses() {
         // 🔁 FIXED SCHEDULE → MOVE TO NEXT CYCLE
         if (
           b.bossSchedule &&
-          !b.bossHour &&
-          diff <= -5 * 60000 &&
+          diff <= -5 * 60000 &&     // 5 minutes after spawn
           !b.cycleReset
         ) {
           const nextDate = getNextScheduledSpawn(b.bossSchedule);
@@ -406,7 +405,8 @@ async function fetchAndRenderBosses() {
               cycleReset: true
             });
 
-            // local memory (anti-spam)
+            // local memory
+            b._ts = nextDate.getTime();
             b.warned10m = false;
             b.spawnedPinged = false;
             b.cycleReset = true;
@@ -414,32 +414,27 @@ async function fetchAndRenderBosses() {
         }
 
         // 🔁 AUTO RESET 5 MIN AFTER SPAWN
-        if (diff <= -5 * 60000 && !b.cycleReset) {
-          let newNext;
+        if (
+          b.bossHour &&
+          diff <= -5 * 60000 &&
+          !b.cycleReset
+        ) {
+          const newNext = new Date(Date.now() + b.bossHour * 60 * 60 * 1000);
 
-          if (b.bossHour) {
-            newNext = new Date(Date.now() + b.bossHour * 60 * 60 * 1000);
-          } else if (b.bossSchedule) {
-            newNext = getNextScheduledSpawn(b.bossSchedule);
-          }
+          update(ref(db, `bosses/${b._key}`), {
+            nextSpawn: newNext.toISOString(),
+            warned10m: false,
+            spawnedPinged: false,
+            cycleReset: true
+          });
 
-          if (newNext) {
-            update(ref(db, `bosses/${b._key}`), {
-              nextSpawn: newNext.toISOString(),
-              warned10m: false,
-              spawnedPinged: false,
-              cycleReset: true
-            });
-
-            // ✅ sync local memory
-            b._ts = newNext.getTime();
-            b.warned10m = false;
-            b.spawnedPinged = false;
-            b.cycleReset = true;
-          }
+          b._ts = newNext.getTime();
+          b.warned10m = false;
+          b.spawnedPinged = false;
+          b.cycleReset = true;
         }
 
-        // clear cycle flag for next round
+        // allow next cycle
         if (diff > 0 && b.cycleReset) {
           update(ref(db, `bosses/${b._key}`), { cycleReset: false });
           b.cycleReset = false;
