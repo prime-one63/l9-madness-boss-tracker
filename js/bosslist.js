@@ -126,14 +126,14 @@ export function initBossList() {
 
       // Hour-based boss → reset spawn timer
       if (entry.bossHour && !entry.bossSchedule) {
-        const newLastKilled = new Date();
-        const nextSpawnTime = new Date(newLastKilled.getTime() + entry.bossHour * 60 * 60 * 1000);
+        // const newLastKilled = new Date();
+        // const nextSpawnTime = new Date(newLastKilled.getTime() + entry.bossHour * 60 * 60 * 1000);
 
-        await update(bossRef, {
-          lastKilled: newLastKilled.toISOString(),
-          nextSpawn: nextSpawnTime.toISOString(),
-        });
-        console.log(`✅ Auto-reset done for ${entry.bossName}`);
+        // await update(bossRef, {
+        //   lastKilled: newLastKilled.toISOString(),
+        //   nextSpawn: nextSpawnTime.toISOString(),
+        // });
+        // console.log(`✅ Auto-reset done for ${entry.bossName}`);
       }
 
       // Fixed-schedule boss → delete entry after spawn
@@ -420,4 +420,5 @@ export function initBossList() {
   // Expose manual repopulate
   window.repopulateWeeklyScheduleBosses = repopulateWeeklyScheduleBosses;
 }
+
 
