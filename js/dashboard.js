@@ -399,6 +399,8 @@ async function fetchAndRenderBosses() {
 
           if (nextDate) {
             update(ref(db, `bosses/${b._key}`), {
+              bossName: b.bossName,
+              guild: 'Faction',
               nextSpawn: nextDate.toISOString(),
               warned10m: false,
               spawnedPinged: false,
@@ -419,7 +421,8 @@ async function fetchAndRenderBosses() {
           diff <= -5 * 60000 &&
           !b.cycleReset
         ) {
-          const newNext = new Date(Date.now() + b.bossHour * 60 * 60 * 1000);
+          const newLastKilled = new Date();
+          const newNext = new Date(newLastKilled.getTime() + b.bossHour * 60 * 60 * 1000);
 
           update(ref(db, `bosses/${b._key}`), {
             nextSpawn: newNext.toISOString(),
