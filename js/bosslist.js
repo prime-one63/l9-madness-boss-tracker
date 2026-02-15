@@ -24,19 +24,14 @@ export function initBossList() {
 
   // ✅ Fixed schedule bosses list
   const fixedScheduleBosses = [
-    { bossName: "CLEMANTIS", guild: "Faction", bossSchedule: "Monday 11:30" },
-    { bossName: "CLEMANTIS", guild: "Faction", bossSchedule: "Thursday 19:00" },
-    { bossName: "SAPHIRUS", guild: "Faction", bossSchedule: "Sunday 17:00" },
-    { bossName: "SAPHIRUS", guild: "Faction", bossSchedule: "Tuesday 11:30" },
-    { bossName: "NEUTRO", guild: "Faction", bossSchedule: "Tuesday 19:00" },
-    { bossName: "NEUTRO", guild: "Faction", bossSchedule: "Thursday 11:30" },
-    { bossName: "THYMELE", guild: "Faction", bossSchedule: "Monday 19:00" },
-    { bossName: "THYMELE", guild: "Faction", bossSchedule: "Wednesday 11:30" },
+    { bossName: "CLEMANTIS", guild: "Faction", bossSchedule: "Monday 11:30, Thursday 19:00" },
+    { bossName: "SAPHIRUS", guild: "Faction", bossSchedule: "Sunday 17:00, Tuesday 11:30" },
+    { bossName: "NEUTRO", guild: "Faction", bossSchedule: "Tuesday 19:00, Thursday 11:30" },
+    { bossName: "THYMELE", guild: "Faction", bossSchedule: "Monday 19:00, Wednesday 11:30" },
     { bossName: "MILAVY", guild: "Faction", bossSchedule: "Saturday 15:00" },
     { bossName: "RINGOR", guild: "Faction", bossSchedule: "Saturday 17:00" },
     { bossName: "RODERICK", guild: "Faction", bossSchedule: "Friday 19:00" },
-    { bossName: "AURAQ", guild: "Faction", bossSchedule: "Friday 22:00" },
-    { bossName: "AURAQ", guild: "Faction", bossSchedule: "Wednesday 21:00" },
+    { bossName: "AURAQ", guild: "Faction", bossSchedule: "Friday 22:00, Wednesday 21:00" },
     { bossName: "CHAIFLOCK", guild: "Faction", bossSchedule: "Saturday 22:00" },
     { bossName: "BENJI", guild: "Faction", bossSchedule: "Sunday 21:00" },
   ];
@@ -89,19 +84,37 @@ export function initBossList() {
   // ✅ Get next weekly schedule
   function getNextScheduledSpawn(scheduleStr) {
     if (!scheduleStr) return null;
-    const now = new Date();
-    const [dayStr, timeStr] = scheduleStr.split(" ");
-    const daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-    const dayIndex = daysOfWeek.findIndex(d => d.toLowerCase() === dayStr.toLowerCase());
-    if (dayIndex === -1 || !timeStr) return null;
-    const [hour, minute] = timeStr.split(":").map(Number);
 
-    let candidate = new Date(now);
-    candidate.setHours(hour, minute, 0, 0);
-    let diff = dayIndex - candidate.getDay();
-    if (diff < 0 || (diff === 0 && candidate <= now)) diff += 7;
-    candidate.setDate(candidate.getDate() + diff);
-    return candidate;
+    const now = new Date();
+    const daysOfWeek = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+    const schedules = scheduleStr.split(",").map(s => s.trim());
+    let soonest = null;
+
+    for (const entry of schedules) {
+      const parts = entry.split(/\s+/);
+      const dayStr = parts[0];
+      const timeStr = parts[1];
+
+      const dayIndex = daysOfWeek.findIndex(
+        d => d.toLowerCase() === dayStr.toLowerCase()
+      );
+      if (dayIndex === -1 || !timeStr) continue;
+
+      const [hour, minute] = timeStr.split(":").map(Number);
+      let candidate = new Date(now);
+      candidate.setHours(hour, minute, 0, 0);
+
+      const diffDays = (dayIndex - candidate.getDay() + 7) % 7;
+      candidate.setDate(candidate.getDate() + diffDays);
+
+      if (candidate < now) candidate.setDate(candidate.getDate() + 7);
+
+      if (!soonest || candidate < soonest) {
+        soonest = candidate;
+      }
+    }
+
+    return soonest;
   }
 
   // ✅ Boss processing tracker
@@ -180,8 +193,9 @@ export function initBossList() {
             guild: b.guild,
             bossSchedule: b.bossSchedule,
             nextSpawn: next ? next.toISOString() : "",
-            bossHour: "",
-            lastKilled: "",
+            warned10m: false,
+            spawnedPinged: false,
+            cycleReset: false
           });
           added++;
         }
@@ -424,6 +438,7 @@ export function initBossList() {
   // Expose manual repopulate
   window.repopulateWeeklyScheduleBosses = repopulateWeeklyScheduleBosses;
 }
+
 
 
 
