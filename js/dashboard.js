@@ -2,7 +2,7 @@ import { db } from "./firebase.js";
 import { ref, get, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
 
-const DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1472168882579050587/hp1EcuK8qfchY9phVxlUqXZ_8ZhjKcLvbpD1aFy-gSLG1DKdOyT5uT1PCyAA4FyVpZBW";
+const DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1472575564278792315/0aWAkyjPJGm2bw54SigGFWrYpuhxNc732aInWhHFQik-jruDqvyBczI5hsayEBCyJHlW";
 
 function sendDiscordMessage(msg) {
   fetch(DISCORD_WEBHOOK, {
@@ -358,35 +358,47 @@ async function fetchAndRenderBosses() {
         // }
 
         // 🔔 DISCORD ADD — 10 MIN WARNING
-        if (diff > 0 && diff <= tenMin && !b.warned10m) {
-          sendDiscordMessage(
-            `📢 @everyone\n` +
-            `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
-            `                                 🐦‍🔥**${b.bossName}**🐦‍🔥\n` +
-            `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
-            `⏳ Status: **spawning at approximately 10 minutes!**\n` +
-            `📆 Time: <t:${Math.floor(Date.now()/1000)}:F>\n` +
-            `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` 
-          );
+        if (diff > 0 && diff <= tenMin) {
+          const bossRef = ref(db, `bosses/${b._key}/warned10m`);
 
-          update(ref(db, `bosses/${b._key}`), { warned10m: true });
-          b.warned10m = true; // ✅ CRITICAL LINE
+          runTransaction(bossRef, (current) => {
+            if (current === true) return; // already locked
+            return true; // acquire lock
+          }).then((result) => {
+            if (result.committed) {
+              sendDiscordMessage(
+                `📢 @everyone\n` +
+                `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
+                `                                 🐦‍🔥**${b.bossName}**🐦‍🔥\n` +
+                `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
+                `⏳ Status: **spawning at approximately 10 minutes!**\n` +
+                `📆 Time: <t:${Math.floor(Date.now()/1000)}:F>\n` +
+                `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` 
+              );
+            }
+          });
         }
 
         // 🔔 DISCORD ADD — SPAWN PING
-        if (diff <= 0 && diff > -1000 && !b.spawnedPinged) {
-          sendDiscordMessage(
-            `📢 @everyone\n` +
-            `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
-            `                                 🐦‍🔥**${b.bossName}**🐦‍🔥\n` +
-            `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
-            `🔥 Status: **SPAWNED!**\n` +
-            `📆 Time: <t:${Math.floor(Date.now()/1000)}:F>\n` +
-            `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` 
-          );
+        if (diff <= 0 && diff > -1000) {
+          const bossRef = ref(db, `bosses/${b._key}/spawnedPinged`);
 
-          update(ref(db, `bosses/${b._key}`), { spawnedPinged: true });
-          b.spawnedPinged = true; // ✅ CRITICAL LINE
+          runTransaction(bossRef, (current) => {
+            if (current === true) return;
+            return true;
+          }).then((result) => {
+            if (result.committed) {
+              sendDiscordMessage(
+                `📢 @everyone\n` +
+                `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
+                `                                 🐦‍🔥**${b.bossName}**🐦‍🔥\n` +
+                `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
+                `🔥 Status: **SPAWNED!**\n` +
+                `📆 Time: <t:${Math.floor(Date.now()/1000)}:F>\n` +
+                `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` 
+              );
+            }
+          });
         }
 
         // 🔁 FIXED SCHEDULE → MOVE TO NEXT CYCLE
@@ -500,4 +512,5 @@ timezoneSelect.addEventListener("change", () => {
 document.addEventListener("visibilitychange", () => {
   if (!document.hidden) fetchAndRenderBosses();
 });
+
 
