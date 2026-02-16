@@ -382,7 +382,7 @@ async function fetchAndRenderBosses() {
         // 🔔 DISCORD ADD — SPAWN PING
         if (diff <= 0 && diff > -1000) {
           const bossRef = ref(db, `bosses/${b._key}/spawnedPinged`);
-
+          b.spawnedPinged = true;
           runTransaction(bossRef, (current) => {
             if (current === true) return;
             return true;
@@ -513,6 +513,7 @@ timezoneSelect.addEventListener("change", () => {
 document.addEventListener("visibilitychange", () => {
   if (!document.hidden) fetchAndRenderBosses();
 });
+
 
 
 
