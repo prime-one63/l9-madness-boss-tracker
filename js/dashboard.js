@@ -335,28 +335,6 @@ async function fetchAndRenderBosses() {
         const diff = liveNextDate - nowUTC();
         const tenMin = 10 * 60000; // ✅ ADD THIS LINE
 
-        // // FOR TESTING ONLY
-        // if(diff > 0 && diff <= 13319000 && !b.spawnedPinged) {
-        //   console.log(b.bossName + ' = ' +diff);
-        //   console.log(b.bossName + ' = ' +tenMin);
-        //   console.log(b.bossName + ' = ' +b.warned10m);
-        //   console.log(b.bossName + ' = ' +b.spawnedPinged);
-
-        //   sendDiscordMessage(
-        //     `📢 @everyone\n` +
-        //     `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
-        //     `                                 🐦‍🔥**${b.bossName}**🐦‍🔥\n` +
-        //     `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
-        //     `🔥 Status: **SPAWNED!**\n` +
-        //     `📆 Time: <t:${Math.floor(Date.now()/1000)}:F>\n` +
-        //     `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` 
-        //   );
-
-
-        //   update(ref(db, `bosses/${b._key}`), { spawnedPinged: true });
-        //   b.spawnedPinged = true; // ✅ CRITICAL LINE
-        // }
-
         // 🔔 DISCORD ADD — 10 MIN WARNING
         if (diff > 0 && diff <= tenMin) {
           const bossRef = ref(db, `bosses/${b._key}/warned10m`);
@@ -404,6 +382,7 @@ async function fetchAndRenderBosses() {
         // 🔁 FIXED SCHEDULE → MOVE TO NEXT CYCLE
         if (
           b.bossSchedule &&
+          !b.bossHour &&
           b.spawnedPinged === true &&
           diff <= -5 * 60000 &&     // 5 minutes after spawn
           !b.cycleReset
@@ -431,6 +410,7 @@ async function fetchAndRenderBosses() {
         // 🔁 AUTO RESET 5 MIN AFTER SPAWN
         if (
           b.bossHour &&
+          !b.bossSchedule &&
           b.spawnedPinged === true &&
           diff <= -5 * 60000 &&
           !b.cycleReset
@@ -513,6 +493,7 @@ timezoneSelect.addEventListener("change", () => {
 document.addEventListener("visibilitychange", () => {
   if (!document.hidden) fetchAndRenderBosses();
 });
+
 
 
 
