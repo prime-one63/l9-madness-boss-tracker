@@ -331,6 +331,7 @@ export function initBossList() {
               await push(bossesRef, {
                 bossName: b.bossName,
                 guild: b.guild,
+                bossHour: 'null',
                 bossSchedule: b.bossSchedule,
                 nextSpawn: next ? next.toISOString() : "",
                 bossHour: "",
@@ -438,6 +439,7 @@ export function initBossList() {
   // Expose manual repopulate
   window.repopulateWeeklyScheduleBosses = repopulateWeeklyScheduleBosses;
 }
+
 
 
 
