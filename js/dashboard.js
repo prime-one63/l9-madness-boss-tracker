@@ -393,6 +393,7 @@ async function fetchAndRenderBosses() {
             update(ref(db, `bosses/${b._key}`), {
               bossName: b.bossName,
               guild: 'Faction',
+              bossHour: 'null',
               nextSpawn: nextDate.toISOString(),
               warned10m: false,
               spawnedPinged: false,
@@ -421,6 +422,7 @@ async function fetchAndRenderBosses() {
           update(ref(db, `bosses/${b._key}`), {
             lastKilled: newLastKilled.toISOString(),
             nextSpawn: newNext.toISOString(),
+            bossSchedule: 'null',
             warned10m: false,
             spawnedPinged: false,
             cycleReset: true
@@ -493,6 +495,7 @@ timezoneSelect.addEventListener("change", () => {
 document.addEventListener("visibilitychange", () => {
   if (!document.hidden) fetchAndRenderBosses();
 });
+
 
 
 
