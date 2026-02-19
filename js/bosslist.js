@@ -396,6 +396,7 @@ export function initBossList() {
           lastKilled: now.toISOString(),
           nextSpawn: nextSpawnTime.toISOString(),
           spawnedPinged: false,
+          bossSchedule: 'null',
           warned10m: false,
           spawnedPinged: false,
           cycleReset: true,
@@ -439,6 +440,7 @@ export function initBossList() {
   // Expose manual repopulate
   window.repopulateWeeklyScheduleBosses = repopulateWeeklyScheduleBosses;
 }
+
 
 
 
