@@ -444,7 +444,11 @@ async function fetchAndRenderBosses() {
           countdown.textContent = "SPAWNING NOW!";
           countdown.style.color = "red";
           card.style.borderLeftColor = "red";
-        } else if (diff > 0 && diff <= 10 * 60000) {
+        } else if (diff > 0 && diff <= 5 * 60000) {
+          countdown.textContent = formatCountdown(b._ts);
+          countdown.style.color = "#66ff00ff";
+          card.style.borderLeftColor = "#66ff00ff";
+        } else if (diff >= 5 * 60000 && diff <= 10 * 60000) {
           countdown.textContent = formatCountdown(b._ts);
           countdown.style.color = "#ff9900";
           card.style.borderLeftColor = "#ff9900";
@@ -495,6 +499,7 @@ timezoneSelect.addEventListener("change", () => {
 document.addEventListener("visibilitychange", () => {
   if (!document.hidden) fetchAndRenderBosses();
 });
+
 
 
 
