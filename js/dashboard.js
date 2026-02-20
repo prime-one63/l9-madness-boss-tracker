@@ -413,7 +413,7 @@ async function fetchAndRenderBosses() {
           b.bossHour &&
           !b.bossSchedule &&
           b.spawnedPinged === true &&
-          diff <= -5 * 60000 &&
+          diff <= -b.est * 60000 &&
           !b.cycleReset
         ) {
           const newLastKilled = new Date();
@@ -499,6 +499,7 @@ timezoneSelect.addEventListener("change", () => {
 document.addEventListener("visibilitychange", () => {
   if (!document.hidden) fetchAndRenderBosses();
 });
+
 
 
 
