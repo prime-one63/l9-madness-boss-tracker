@@ -370,7 +370,7 @@ h2.section-header span {
 }
 
 main {
-  margin: 0 auto;
+  margin: 55px auto;
   padding: 1rem 2rem;
   display: flex;
   flex-direction: column;
@@ -638,4 +638,5 @@ main {
     width: 100%;
   }
 }
+
 
