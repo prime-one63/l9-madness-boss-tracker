@@ -416,11 +416,10 @@ async function fetchAndRenderBosses() {
           diff <= -b.est * 60000 &&
           !b.cycleReset
         ) {
-          const newLastKilled = new Date();
-          const newNext = new Date(newLastKilled.getTime() + b.bossHour * 60 * 60 * 1000);
+          const newNext = new Date(now.getTime() + b.bossHour * 60 * 60 * 1000);
 
           update(ref(db, `bosses/${b._key}`), {
-            lastKilled: newLastKilled.toISOString(),
+            lastKilled: now.toISOString(),
             nextSpawn: newNext.toISOString(),
             bossSchedule: 'null',
             warned10m: false,
@@ -499,6 +498,7 @@ timezoneSelect.addEventListener("change", () => {
 document.addEventListener("visibilitychange", () => {
   if (!document.hidden) fetchAndRenderBosses();
 });
+
 
 
 
