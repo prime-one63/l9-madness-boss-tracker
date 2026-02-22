@@ -387,6 +387,7 @@ async function fetchAndRenderBosses() {
           diff <= -5 * 60000 &&     // 5 minutes after spawn
           !b.cycleReset
         ) {
+          const now = new Date();
           const nextDate = getNextScheduledSpawn(b.bossSchedule);
 
           if (nextDate) {
@@ -417,6 +418,7 @@ async function fetchAndRenderBosses() {
           diff <= -b.est * 60000 &&
           !b.cycleReset
         ) {
+          const now = new Date();
           const newNext = new Date(now.getTime() + b.bossHour * 60 * 60 * 1000);
 
           update(ref(db, `bosses/${b._key}`), {
@@ -499,6 +501,7 @@ timezoneSelect.addEventListener("change", () => {
 document.addEventListener("visibilitychange", () => {
   if (!document.hidden) fetchAndRenderBosses();
 });
+
 
 
 
