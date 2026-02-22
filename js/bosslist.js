@@ -397,6 +397,7 @@ export function initBossList() {
           nextSpawn: nextSpawnTime.toISOString(),
           spawnedPinged: false,
           bossSchedule: 'null',
+          guild: 'Faction',
           warned10m: false,
           spawnedPinged: false,
           cycleReset: true,
@@ -440,6 +441,7 @@ export function initBossList() {
   // Expose manual repopulate
   window.repopulateWeeklyScheduleBosses = repopulateWeeklyScheduleBosses;
 }
+
 
 
 
