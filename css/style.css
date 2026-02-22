@@ -145,11 +145,11 @@ p.countdown {
 }
 
 /* Color variants */
-.guild-badge.Cloud9 { background-color: #00bfff; }
-.guild-badge.Midnight { background-color: #15388577; }
-.guild-badge.HellSing { background-color: #ff3b3b; }
-.guild-badge.Sanctis { background-color: #28a745; }
-.guild-badge.Celestials { background-color: #ffd54f; color: #111; }
+.guild-badge.AzteczX4龙牙 { background-color: #00bfff; }
+.guild-badge.AZTECzX1 { background-color: #15388577; }
+.guild-badge.AZTECzV2 { background-color: #ff3b3b; }
+.guild-badge.クAzteczモ { background-color: #28a745; }
+.guild-badge.ValhallasS { background-color: #ffd54f; color: #111; }
 .guild-badge.FFA { background-color: #808080; }
 .guild-badge.Faction { background-color: #8f5186; }
 
@@ -638,3 +638,4 @@ main {
     width: 100%;
   }
 }
+
