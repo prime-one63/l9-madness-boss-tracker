@@ -399,6 +399,7 @@ async function fetchAndRenderBosses() {
               nextSpawn: nextDate.toISOString(),
               warned10m: false,
               spawnedPinged: false,
+              guild: 'Faction',
               cycleReset: true
             });
 
@@ -427,6 +428,7 @@ async function fetchAndRenderBosses() {
             bossSchedule: 'null',
             warned10m: false,
             spawnedPinged: false,
+            guild: 'Faction',
             cycleReset: true
           });
 
@@ -501,6 +503,7 @@ timezoneSelect.addEventListener("change", () => {
 document.addEventListener("visibilitychange", () => {
   if (!document.hidden) fetchAndRenderBosses();
 });
+
 
 
 
