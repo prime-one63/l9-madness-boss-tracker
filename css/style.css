@@ -160,7 +160,23 @@ p.countdown {
   border-bottom: 2px solid rgba(255,255,255,0.1);
 }
 
+/* Name + Level Row */
+.boss-name-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
 
+/* Level badge style */
+.level-badge {
+  background-color: #f5dc00;
+  color: rgb(0, 0, 0);
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+}
 
 /* ===== Dashboard Layout ===== */
 .boss-grid {
@@ -638,5 +654,6 @@ main {
     width: 100%;
   }
 }
+
 
 
