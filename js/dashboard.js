@@ -336,9 +336,9 @@ async function fetchAndRenderBosses() {
     title.textContent = b.bossName || "Unknown";
     nameRow.appendChild(title);
 
-    const lvl = b.lvl || "Lv.0";
+    const lvl = "Lv." + b.lvl || "Lv.0";
     const lvlTag = document.createElement("span");
-    lvlTag.textContent = 'Lv. ' + lvl;
+    lvlTag.textContent = lvl;
     lvlTag.className = `level-badge ${guild}`;
     nameRow.appendChild(lvlTag);
     info.appendChild(nameRow);
@@ -529,6 +529,7 @@ timezoneSelect.addEventListener("change", () => {
 document.addEventListener("visibilitychange", () => {
   if (!document.hidden) fetchAndRenderBosses();
 });
+
 
 
 
