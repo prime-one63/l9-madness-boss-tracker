@@ -307,15 +307,40 @@ async function fetchAndRenderBosses() {
     info.className = "boss-tile-info";
     card.appendChild(info);
 
-    const guild = b.guild || "FFA";
+    const guild = b.guild || "FACTION";
     const guildTag = document.createElement("span");
-    guildTag.textContent = guild;
+    guildTag.textContent = '🜲 '+guild;
     guildTag.className = `guild-badge ${guild}`;
     info.appendChild(guildTag);
 
+    if(b.bossHour && !b.bossSchedule) {
+      const boss = "Respawnable";
+      const bossTag = document.createElement("span");
+      bossTag.textContent = boss;
+      bossTag.className = `guild-badge ${guild}`;
+      info.appendChild(bossTag);
+    } else {
+      const boss = "Scheduled";
+      const bossTag = document.createElement("span");
+      bossTag.textContent = boss;
+      bossTag.className = `guild-badge ${guild}`;
+      info.appendChild(bossTag);
+    }
+
+    // === Name + Level Wrapper ===
+    const nameRow = document.createElement("div");
+    nameRow.className = "boss-name-row";
+
     const title = document.createElement("h3");
     title.textContent = b.bossName || "Unknown";
-    info.appendChild(title);
+    nameRow.appendChild(title);
+
+    const lvl = b.lvl || "Lv.0";
+    const lvlTag = document.createElement("span");
+    lvlTag.textContent = 'Lv. ' + lvl;
+    lvlTag.className = `level-badge ${guild}`;
+    nameRow.appendChild(lvlTag);
+    info.appendChild(nameRow);
 
     const nextDate = b._ts !== Infinity ? new Date(b._ts) : null;
     const countdown = document.createElement("span");
@@ -503,6 +528,7 @@ timezoneSelect.addEventListener("change", () => {
 document.addEventListener("visibilitychange", () => {
   if (!document.hidden) fetchAndRenderBosses();
 });
+
 
 
 
