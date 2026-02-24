@@ -419,7 +419,6 @@ async function fetchAndRenderBosses() {
           if (nextDate) {
             update(ref(db, `bosses/${b._key}`), {
               bossName: b.bossName,
-              guild: 'Faction',
               lastKilled: now.toISOString(),
               bossHour: 'null',
               nextSpawn: nextDate.toISOString(),
@@ -527,6 +526,7 @@ timezoneSelect.addEventListener("change", () => {
 document.addEventListener("visibilitychange", () => {
   if (!document.hidden) fetchAndRenderBosses();
 });
+
 
 
 
