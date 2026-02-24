@@ -371,7 +371,7 @@ export function initBossList() {
         const b = snap.val();
 
         bossName.value = b.bossName || "";
-        bossHour.value = b.bossHour || "";
+        bossHour.value = b.bossHour || "null";
         lastKilled.value = toDatetimeLocalInput(b.lastKilled);
         nextSpawn.value = toDatetimeLocalInput(b.nextSpawn);
         document.getElementById("guild").value = b.guild || "FFA";
@@ -443,6 +443,7 @@ export function initBossList() {
   // Expose manual repopulate
   window.repopulateWeeklyScheduleBosses = repopulateWeeklyScheduleBosses;
 }
+
 
 
 
