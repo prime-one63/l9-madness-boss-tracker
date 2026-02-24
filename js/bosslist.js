@@ -234,8 +234,8 @@ export function initBossList() {
     const guildVal = document.getElementById("guild").value || "FACTION";
     const entry = {
       bossName: bossName.value.trim().toUpperCase(),
-      bossHour: spawnHourType.checked ? bossHour.value : "",
-      bossSchedule: spawnScheduleType.checked ? bossSchedule.value : "",
+      bossHour: spawnHourType.checked ? bossHour.value : "null",
+      bossSchedule: spawnScheduleType.checked ? bossSchedule.value : "null",
       lastKilled: lastKilled.value,
       nextSpawn: nextSpawn.value,
       guild: guildVal,
@@ -442,6 +442,7 @@ export function initBossList() {
   // Expose manual repopulate
   window.repopulateWeeklyScheduleBosses = repopulateWeeklyScheduleBosses;
 }
+
 
 
 
