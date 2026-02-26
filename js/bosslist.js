@@ -195,9 +195,10 @@ export function initBossList() {
             guild: b.guild,
             lvl: b.lvl,
             est: b.est,
-            bossHour: "null",
             bossSchedule: b.bossSchedule,
             nextSpawn: next ? next.toISOString() : "",
+            bossHour: "null",
+            lastKilled: "",
             warned10m: false,
             spawnedPinged: false,
             cycleReset: false
@@ -449,6 +450,7 @@ export function initBossList() {
   // Expose manual repopulate
   window.repopulateWeeklyScheduleBosses = repopulateWeeklyScheduleBosses;
 }
+
 
 
 
