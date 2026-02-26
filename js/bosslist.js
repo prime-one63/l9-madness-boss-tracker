@@ -24,18 +24,18 @@ export function initBossList() {
 
   // ✅ Fixed schedule bosses list
   const fixedScheduleBosses = [
-    { bossName: "CLEMANTIS", guild: "Faction", bossSchedule: "Monday 11:30, Thursday 19:00" },
-    { bossName: "LIBITINA", guild: "Faction", bossSchedule: "Monday 21:00, Saturday 21:00" },
-    { bossName: "RAKAJETH", guild: "Faction", bossSchedule: "Tuesday 22:00, Sunday 19:00" },
-    { bossName: "SAPHIRUS", guild: "Faction", bossSchedule: "Sunday 17:00, Tuesday 11:30" },
-    { bossName: "NEUTRO", guild: "Faction", bossSchedule: "Tuesday 19:00, Thursday 11:30" },
-    { bossName: "THYMELE", guild: "Faction", bossSchedule: "Monday 19:00, Wednesday 11:30" },
-    { bossName: "MILAVY", guild: "Faction", bossSchedule: "Saturday 15:00" },
-    { bossName: "RINGOR", guild: "Faction", bossSchedule: "Saturday 17:00" },
-    { bossName: "RODERICK", guild: "Faction", bossSchedule: "Friday 19:00" },
-    { bossName: "AURAQ", guild: "Faction", bossSchedule: "Friday 22:00, Wednesday 21:00" },
-    { bossName: "CHAIFLOCK", guild: "Faction", bossSchedule: "Saturday 22:00" },
-    { bossName: "BENJI", guild: "Faction", bossSchedule: "Sunday 21:00" },
+    { bossName: "CLEMANTIS", guild: "Faction", bossSchedule: "Monday 11:30, Thursday 19:00", lvl: "70", est: "3" },
+    { bossName: "LIBITINA", guild: "Faction", bossSchedule: "Monday 21:00, Saturday 21:00", lvl: "130", est: "15" },
+    { bossName: "RAKAJETH", guild: "Faction", bossSchedule: "Tuesday 22:00, Sunday 19:00", lvl: "130", est: "15" },
+    { bossName: "SAPHIRUS", guild: "Faction", bossSchedule: "Sunday 17:00, Tuesday 11:30", lvl: "80", est: "4" },
+    { bossName: "NEUTRO", guild: "Faction", bossSchedule: "Tuesday 19:00, Thursday 11:30", lvl: "80", est: "4" },
+    { bossName: "THYMELE", guild: "Faction", bossSchedule: "Monday 19:00, Wednesday 11:30", lvl: "85", est: "5" },
+    { bossName: "MILAVY", guild: "Faction", bossSchedule: "Saturday 15:00", lvl: "90", est: "5" },
+    { bossName: "RINGOR", guild: "Faction", bossSchedule: "Saturday 17:00", lvl: "95", est: "5" },
+    { bossName: "RODERICK", guild: "Faction", bossSchedule: "Friday 19:00", lvl: "95", est: "5" },
+    { bossName: "AURAQ", guild: "Faction", bossSchedule: "Friday 22:00, Wednesday 21:00", lvl: "100", est: "5" },
+    { bossName: "CHAIFLOCK", guild: "Faction", bossSchedule: "Saturday 22:00", lvl: "120", est: "5" },
+    { bossName: "BENJI", guild: "Faction", bossSchedule: "Sunday 21:00", lvl: "120", est: "10" },
   ];
 
   // ✅ Convert timestamps for form fields
@@ -193,6 +193,9 @@ export function initBossList() {
           await push(bossesRef, {
             bossName: b.bossName,
             guild: b.guild,
+            lvl: b.lvl,
+            est: b.est,
+            bossHour: "null",
             bossSchedule: b.bossSchedule,
             nextSpawn: next ? next.toISOString() : "",
             warned10m: false,
@@ -333,11 +336,15 @@ export function initBossList() {
               await push(bossesRef, {
                 bossName: b.bossName,
                 guild: b.guild,
-                bossHour: 'null',
+                lvl: b.lvl,
+                est: b.est,
                 bossSchedule: b.bossSchedule,
                 nextSpawn: next ? next.toISOString() : "",
-                bossHour: "",
+                bossHour: "null",
                 lastKilled: "",
+                warned10m: false,
+                spawnedPinged: false,
+                cycleReset: false
               });
               added++;
             }
@@ -442,6 +449,7 @@ export function initBossList() {
   // Expose manual repopulate
   window.repopulateWeeklyScheduleBosses = repopulateWeeklyScheduleBosses;
 }
+
 
 
 
