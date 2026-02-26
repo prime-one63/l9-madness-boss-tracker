@@ -32,19 +32,19 @@ export function initBossList() {
 
   // ✅ Fixed schedule bosses list
   const fixedScheduleBosses = [
-    { bossName: "CLEMANTIS", guild: "Faction", bossSchedule: "Monday 11:30, Thursday 19:00", lvl: "70", est: "3" },
-    { bossName: "LIBITINA", guild: "Faction", bossSchedule: "Monday 21:00, Saturday 21:00", lvl: "130", est: "15" },
-    { bossName: "RAKAJETH", guild: "Faction", bossSchedule: "Tuesday 22:00, Sunday 19:00", lvl: "130", est: "15" },
-    { bossName: "SAPHIRUS", guild: "Faction", bossSchedule: "Sunday 17:00, Tuesday 11:30", lvl: "80", est: "4" },
-    { bossName: "NEUTRO", guild: "Faction", bossSchedule: "Tuesday 19:00, Thursday 11:30", lvl: "80", est: "4" },
-    { bossName: "THYMELE", guild: "Faction", bossSchedule: "Monday 19:00, Wednesday 11:30", lvl: "85", est: "5" },
-    { bossName: "MILAVY", guild: "Faction", bossSchedule: "Saturday 15:00", lvl: "90", est: "5" },
-    { bossName: "RINGOR", guild: "Faction", bossSchedule: "Saturday 17:00", lvl: "95", est: "5" },
-    { bossName: "RODERICK", guild: "Faction", bossSchedule: "Friday 19:00", lvl: "95", est: "5" },
-    { bossName: "AURAQ", guild: "Faction", bossSchedule: "Friday 22:00, Wednesday 21:00", lvl: "100", est: "5" },
-    { bossName: "CHAIFLOCK", guild: "Faction", bossSchedule: "Saturday 22:00", lvl: "120", est: "5" },
-    { bossName: "BENJI", guild: "Faction", bossSchedule: "Sunday 21:00", lvl: "120", est: "10" },
-    { bossName: "TUMIER", guild: "Faction", bossSchedule: "Sunday 19:00", lvl: "140", est: "20" },
+    { bossName: "CLEMANTIS", guild: "Faction", bossSchedule: "Monday 11:30, Thursday 19:00", lvl: "70", est: "2" },
+    { bossName: "LIBITINA", guild: "Faction", bossSchedule: "Monday 21:00, Saturday 21:00", lvl: "130", est: "2" },
+    { bossName: "RAKAJETH", guild: "Faction", bossSchedule: "Tuesday 22:00, Sunday 19:00", lvl: "130", est: "2" },
+    { bossName: "SAPHIRUS", guild: "Faction", bossSchedule: "Sunday 17:00, Tuesday 11:30", lvl: "80", est: "2" },
+    { bossName: "NEUTRO", guild: "Faction", bossSchedule: "Tuesday 19:00, Thursday 11:30", lvl: "80", est: "2" },
+    { bossName: "THYMELE", guild: "Faction", bossSchedule: "Monday 19:00, Wednesday 11:30", lvl: "85", est: "2" },
+    { bossName: "MILAVY", guild: "Faction", bossSchedule: "Saturday 15:00", lvl: "90", est: "2" },
+    { bossName: "RINGOR", guild: "Faction", bossSchedule: "Saturday 17:00", lvl: "95", est: "2" },
+    { bossName: "RODERICK", guild: "Faction", bossSchedule: "Friday 19:00", lvl: "95", est: "2" },
+    { bossName: "AURAQ", guild: "Faction", bossSchedule: "Friday 22:00, Wednesday 21:00", lvl: "100", est: "2" },
+    { bossName: "CHAIFLOCK", guild: "Faction", bossSchedule: "Saturday 22:00", lvl: "120", est: "2" },
+    { bossName: "BENJI", guild: "Faction", bossSchedule: "Sunday 21:00", lvl: "120", est: "2" },
+    { bossName: "TUMIER", guild: "Faction", bossSchedule: "Sunday 19:00", lvl: "140", est: "2" },
   ];
 
   // -------------------------
@@ -426,4 +426,5 @@ export function initBossList() {
   });
   updateSpawnTypeUI();
 }
+
 
