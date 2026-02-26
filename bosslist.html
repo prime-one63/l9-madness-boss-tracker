@@ -46,6 +46,14 @@
             <input type="text" class="form-control text-uppercase" id="bossName" required />
           </div>
           <div class="mb-3">
+            <label class="form-label">Estimated Time Death</label>
+            <input type="number" min="1" step="1" class="form-control text-uppercase" value="1" id="estimatedDeath" required />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Boss Level</label>
+            <input type="number" min="60" step="1" class="form-control text-uppercase" value="60" id="bossLevel" required />
+          </div>
+          <div class="mb-3">
             <label for="guild" class="form-label">Assigned Guild</label>
             <select id="guild" class="form-select">
               <option value="Faction" selected>Faction</option>
