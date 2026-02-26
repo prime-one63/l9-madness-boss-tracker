@@ -47,6 +47,10 @@ export function initBossList() {
     { bossName: "TUMIER", guild: "Faction", bossSchedule: "Sunday 19:00", lvl: "140", est: "20" },
   ];
 
+  // -------------------------
+  // UTILITIES
+  // -------------------------
+
   function isSameWeek(date) {
     const now = new Date();
 
@@ -63,9 +67,34 @@ export function initBossList() {
     return date >= startOfWeek && date <= endOfWeek;
   }
 
-  // -------------------------
-  // UTILITIES
-  // -------------------------
+  // ✅ Calculate next spawn time
+  function calcNextSpawn() {
+    const isHourBased = spawnHourType.checked;
+    const isScheduleBased = spawnScheduleType.checked;
+    const lastKilledVal = lastKilled.value;
+
+    if (isHourBased) {
+      const hours = parseFloat(bossHour.value);
+      if (hours && lastKilledVal) {
+        const d = new Date(lastKilledVal);
+        d.setHours(d.getHours() + hours);
+        const local = new Date(d.getTime() - d.getTimezoneOffset() * 60000)
+          .toISOString()
+          .slice(0, 16);
+        nextSpawn.value = local;
+      }
+    } else if (isScheduleBased) {
+      const schedule = bossSchedule.value;
+      if (!schedule) return;
+      const next = getNextScheduledSpawn(schedule);
+      if (next) {
+        const local = new Date(next.getTime() - next.getTimezoneOffset() * 60000)
+          .toISOString()
+          .slice(0, 16);
+        nextSpawn.value = local;
+      }
+    }
+  }
 
   function toDatetimeLocalInput(stored) {
     if (!stored) return "";
@@ -378,6 +407,12 @@ export function initBossList() {
   // UI TOGGLE
   // -------------------------
 
+  bossHour.addEventListener("input", calcNextSpawn);
+  bossSchedule.addEventListener("change", calcNextSpawn);
+  lastKilled.addEventListener("input", calcNextSpawn);
+  spawnHourType.addEventListener("change", calcNextSpawn);
+  spawnScheduleType.addEventListener("change", calcNextSpawn);
+
   function updateSpawnTypeUI() {
     hourGroup.style.display = spawnHourType.checked ? "block" : "none";
     lastKilledField.style.display = spawnHourType.checked ? "block" : "none";
@@ -391,3 +426,4 @@ export function initBossList() {
   });
   updateSpawnTypeUI();
 }
+
