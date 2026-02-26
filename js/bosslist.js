@@ -38,6 +38,22 @@ export function initBossList() {
     { bossName: "BENJI", guild: "Faction", bossSchedule: "Sunday 21:00", lvl: "120", est: "10" },
   ];
 
+  function isSameWeek(date) {
+    const now = new Date();
+
+    // Start of this week (Sunday)
+    const startOfWeek = new Date(now);
+    startOfWeek.setHours(0,0,0,0);
+    startOfWeek.setDate(now.getDate() - now.getDay());
+
+    // End of this week (Saturday 23:59:59)
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 6);
+    endOfWeek.setHours(23,59,59,999);
+
+    return date >= startOfWeek && date <= endOfWeek;
+  }
+
   // ✅ Convert timestamps for form fields
   function toDatetimeLocalInput(stored) {
     if (!stored) return "";
@@ -324,30 +340,47 @@ export function initBossList() {
           if (snapshot.exists()) {
             snapshot.forEach((child) => {
               const b = child.val();
-              if (b.bossSchedule)
-                existing.push(`${b.bossName}_${b.bossSchedule}`.toUpperCase());
+              if (b.nextSpawn)
+                existing.push(`${b.bossName}_${b.nextSpawn}`.toUpperCase());
             });
           }
 
           let added = 0;
           for (const b of fixedScheduleBosses) {
-            const key = `${b.bossName}_${b.bossSchedule}`.toUpperCase();
-            if (!existing.includes(key)) {
-              const next = getNextScheduledSpawn(b.bossSchedule);
-              await push(bossesRef, {
-                bossName: b.bossName,
-                guild: b.guild,
-                lvl: b.lvl,
-                est: b.est,
-                bossSchedule: b.bossSchedule,
-                nextSpawn: next ? next.toISOString() : "",
-                bossHour: "null",
-                lastKilled: "",
-                warned10m: false,
-                spawnedPinged: false,
-                cycleReset: false
-              });
-              added++;
+
+            // Split multiple schedules
+            const schedules = b.bossSchedule.split(",").map(s => s.trim());
+
+            for (const scheduleEntry of schedules) {
+
+              const nextSpawn = getNextScheduledSpawn(scheduleEntry);
+              if (!nextSpawn) continue;
+
+              // ✅ Only add if inside this week
+              if (!isSameWeek(nextSpawn)) continue;
+
+              // Unique key per boss + exact spawn time
+              const key = `${b.bossName}_${nextSpawn.toISOString()}`.toUpperCase();
+
+              if (!existing.includes(key)) {
+
+                await push(bossesRef, {
+                  bossName: b.bossName,
+                  guild: b.guild,
+                  lvl: b.lvl,
+                  est: b.est,
+                  bossSchedule: scheduleEntry,
+                  nextSpawn: nextSpawn.toISOString(),
+                  bossHour: "null",
+                  lastKilled: "",
+                  warned10m: false,
+                  spawnedPinged: false,
+                  cycleReset: false
+                });
+
+                existing.push(key); // prevent duplicate in same run
+                added++;
+              }
             }
           }
 
@@ -450,6 +483,7 @@ export function initBossList() {
   // Expose manual repopulate
   window.repopulateWeeklyScheduleBosses = repopulateWeeklyScheduleBosses;
 }
+
 
 
 
