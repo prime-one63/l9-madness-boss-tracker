@@ -140,7 +140,7 @@ export function initBossList() {
       const tr = document.createElement("tr");
       tr.innerHTML = `
         <td>${b.bossName || "Unknown"}</td>
-        <td>${b.guild || "Faction"}</td>
+        <td><span class="badge bg-secondary">${b.guild || "Faction"}</span></td>
         <td>${b.bossHour && b.bossHour !== "null" ? b.bossHour + "h" : b.bossSchedule || "--"}</td>
         <td>${b.lastKilled || "--"}</td>
         <td>${b.nextSpawn || "--"}</td>
