@@ -1,5 +1,5 @@
 import { db } from "./firebase.js";
-import { ref, get, update, runTransaction } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { ref, get, update, runTransaction, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
 
 const DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1472575564278792315/0aWAkyjPJGm2bw54SigGFWrYpuhxNc732aInWhHFQik-jruDqvyBczI5hsayEBCyJHlW";
@@ -410,29 +410,10 @@ async function fetchAndRenderBosses() {
           b.bossSchedule &&
           !b.bossHour &&
           b.spawnedPinged === true &&
-          diff <= -5 * 60000 &&     // 5 minutes after spawn
+          diff <= -b.est * 60000 &&     // estimed time of death minutes after spawn
           !b.cycleReset
         ) {
-          const now = new Date();
-          const nextDate = getNextScheduledSpawn(b.bossSchedule);
-
-          if (nextDate) {
-            update(ref(db, `bosses/${b._key}`), {
-              bossName: b.bossName,
-              lastKilled: now.toISOString(),
-              bossHour: 'null',
-              nextSpawn: nextDate.toISOString(),
-              warned10m: false,
-              spawnedPinged: false,
-              cycleReset: true
-            });
-
-            // local memory
-            b._ts = nextDate.getTime();
-            b.warned10m = false;
-            b.spawnedPinged = false;
-            b.cycleReset = true;
-          }
+          remove(ref(db, "bosses/" + key));
         }
 
         // 🔁 AUTO RESET 5 MIN AFTER SPAWN
@@ -526,6 +507,7 @@ timezoneSelect.addEventListener("change", () => {
 document.addEventListener("visibilitychange", () => {
   if (!document.hidden) fetchAndRenderBosses();
 });
+
 
 
 
