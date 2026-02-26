@@ -314,7 +314,7 @@ async function fetchAndRenderBosses() {
     guildTag.className = `guild-badge ${guild}`;
     info.appendChild(guildTag);
 
-    if(b.bossHour && !b.bossSchedule) {
+    if(b.bossHour !== "null") {
       const boss = "Respawnable";
       const bossTag = document.createElement("span");
       bossTag.textContent = boss;
@@ -507,6 +507,7 @@ timezoneSelect.addEventListener("change", () => {
 document.addEventListener("visibilitychange", () => {
   if (!document.hidden) fetchAndRenderBosses();
 });
+
 
 
 
