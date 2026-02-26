@@ -422,31 +422,67 @@ export function initBossList() {
       });
     });
 
-    // ✅ Reset button
-    document.querySelectorAll(".reset-btn").forEach((btn) => {
-      btn.addEventListener("click", async () => {
-        const key = btn.dataset.key;
-        const bossRef = ref(db, "bosses/" + key);
-        const snap = await get(bossRef);
-        if (!snap.exists()) return alert("⚠️ Boss not found!");
+    // ✅ Edit button (fixed & clean version)
+    document.addEventListener("click", async (e) => {
+      if (!e.target.classList.contains("edit-btn")) return;
 
-        const entry = snap.val();
-        if (!confirm(`Reset ${entry.bossName}?`)) return;
+      const key = e.target.dataset.key;
+      const bossRef = ref(db, "bosses/" + key);
+      const snap = await get(bossRef);
 
-        const now = new Date();
-        const nextSpawnTime = new Date(now.getTime() + entry.bossHour * 60 * 60 * 1000);
-        await update(bossRef, {
-          lastKilled: now.toISOString(),
-          nextSpawn: nextSpawnTime.toISOString(),
-          spawnedPinged: false,
-          bossSchedule: 'null',
-          warned10m: false,
-          spawnedPinged: false,
-          cycleReset: true,
-        });
+      if (!snap.exists()) {
+        alert("⚠️ Boss not found!");
+        return;
+      }
 
-        monitorBosses();
-      });
+      const b = snap.val();
+
+      // Reset form first
+      document.getElementById("bossForm").reset();
+
+      // Change modal title
+      document.getElementById("modal-header-text").textContent = "Edit Boss";
+
+      // Fill basic fields
+      bossName.value = b.bossName || "";
+      document.getElementById("guild").value = b.guild || "Faction";
+      editKey.value = key;
+
+      // Clear both radio states first
+      spawnHourType.checked = false;
+      spawnScheduleType.checked = false;
+
+      // ✅ If Scheduled Boss
+      console.log(b.bossHour);
+      if (b.bossHour && b.bossHour !== "null") {
+        // ✅ Hour Interval Boss
+
+        spawnHourType.checked = true;
+
+        hourGroup.style.display = "block";
+        scheduleGroup.style.display = "none";
+        lastKilledField.style.display = "block";
+
+        bossHour.value = b.bossHour && b.bossHour !== "null"
+          ? b.bossHour
+          : "";
+
+      } else {
+        
+        spawnScheduleType.checked = true;
+
+        hourGroup.style.display = "none";
+        lastKilledField.style.display = "none";
+        scheduleGroup.style.display = "block";
+
+        bossSchedule.value = b.bossSchedule || "";
+      }
+
+      // Dates
+      lastKilled.value = toDatetimeLocalInput(b.lastKilled);
+      nextSpawn.value = toDatetimeLocalInput(b.nextSpawn);
+
+      bossModal.show();
     });
 
     // ✅ Delete button
@@ -458,6 +494,20 @@ export function initBossList() {
         }
       });
     });
+  });
+
+  spawnHourType.addEventListener("change", () => {
+    if (spawnHourType.checked) {
+      hourGroup.style.display = "block";
+      scheduleGroup.style.display = "none";
+    }
+  });
+
+  spawnScheduleType.addEventListener("change", () => {
+    if (spawnScheduleType.checked) {
+      hourGroup.style.display = "none";
+      scheduleGroup.style.display = "block";
+    }
   });
 
   // ✅ Continuous monitor
@@ -483,6 +533,7 @@ export function initBossList() {
   // Expose manual repopulate
   window.repopulateWeeklyScheduleBosses = repopulateWeeklyScheduleBosses;
 }
+
 
 
 
