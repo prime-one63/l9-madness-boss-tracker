@@ -1,11 +1,15 @@
 import { db } from "./firebase.js";
-import { ref, push, set, update, remove, onValue, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { ref, push, set, update, remove, onValue, get } 
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
 export function initBossList() {
-  window.onerror = (msg, src, line, col, err) => {
-    console.error("⚠️ JS Error:", msg, "at", line, ":", col, err);
-  };
 
+  let bossCache = {};
+  const processedBosses = new Map();
+
+  // -------------------------
+  // DOM REFERENCES
+  // -------------------------
   const bossForm = document.getElementById("bossForm");
   const bossTable = document.querySelector("#bossTable tbody");
   const bossModal = new bootstrap.Modal(document.getElementById("bossModal"));
@@ -23,6 +27,8 @@ export function initBossList() {
   const spawnScheduleType = document.getElementById("spawnScheduleType");
   const estimatedDeath = document.getElementById("estimatedDeath");
   const bossLevel = document.getElementById("bossLevel");
+  const btnRepopulate = document.getElementById("btnRepopulate");
+
 
   // ✅ Fixed schedule bosses list
   const fixedScheduleBosses = [
@@ -38,6 +44,7 @@ export function initBossList() {
     { bossName: "AURAQ", guild: "Faction", bossSchedule: "Friday 22:00, Wednesday 21:00", lvl: "100", est: "5" },
     { bossName: "CHAIFLOCK", guild: "Faction", bossSchedule: "Saturday 22:00", lvl: "120", est: "5" },
     { bossName: "BENJI", guild: "Faction", bossSchedule: "Sunday 21:00", lvl: "120", est: "10" },
+    { bossName: "TUMIER", guild: "Faction", bossSchedule: "Sunday 19:00", lvl: "140", est: "20" },
   ];
 
   function isSameWeek(date) {
@@ -56,480 +63,331 @@ export function initBossList() {
     return date >= startOfWeek && date <= endOfWeek;
   }
 
-  // ✅ Convert timestamps for form fields
+  // -------------------------
+  // UTILITIES
+  // -------------------------
+
   function toDatetimeLocalInput(stored) {
     if (!stored) return "";
-    if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(stored)) return stored;
     const d = new Date(stored);
     if (isNaN(d)) return "";
-    const pad = (n) => String(n).padStart(2, "0");
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    const pad = n => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
   }
 
-  // ✅ Calculate next spawn time
-  function calcNextSpawn() {
-    const isHourBased = spawnHourType.checked;
-    const isScheduleBased = spawnScheduleType.checked;
-    const lastKilledVal = lastKilled.value;
-
-    if (isHourBased) {
-      const hours = parseFloat(bossHour.value);
-      if (hours && lastKilledVal) {
-        const d = new Date(lastKilledVal);
-        d.setHours(d.getHours() + hours);
-        const local = new Date(d.getTime() - d.getTimezoneOffset() * 60000)
-          .toISOString()
-          .slice(0, 16);
-        nextSpawn.value = local;
-      }
-    } else if (isScheduleBased) {
-      const schedule = bossSchedule.value;
-      if (!schedule) return;
-      const next = getNextScheduledSpawn(schedule);
-      if (next) {
-        const local = new Date(next.getTime() - next.getTimezoneOffset() * 60000)
-          .toISOString()
-          .slice(0, 16);
-        nextSpawn.value = local;
-      }
-    }
-  }
-
-  bossHour.addEventListener("input", calcNextSpawn);
-  bossSchedule.addEventListener("change", calcNextSpawn);
-  lastKilled.addEventListener("input", calcNextSpawn);
-  spawnHourType.addEventListener("change", calcNextSpawn);
-  spawnScheduleType.addEventListener("change", calcNextSpawn);
-
-  // ✅ Get next weekly schedule
   function getNextScheduledSpawn(scheduleStr) {
     if (!scheduleStr) return null;
 
     const now = new Date();
-    const daysOfWeek = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+    const days = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
     const schedules = scheduleStr.split(",").map(s => s.trim());
     let soonest = null;
 
     for (const entry of schedules) {
-      const parts = entry.split(/\s+/);
-      const dayStr = parts[0];
-      const timeStr = parts[1];
+      const [dayStr, timeStr] = entry.split(" ");
+      if (!dayStr || !timeStr) continue;
 
-      const dayIndex = daysOfWeek.findIndex(
-        d => d.toLowerCase() === dayStr.toLowerCase()
-      );
-      if (dayIndex === -1 || !timeStr) continue;
+      const dayIndex = days.findIndex(d => d.toLowerCase() === dayStr.toLowerCase());
+      if (dayIndex === -1) continue;
 
       const [hour, minute] = timeStr.split(":").map(Number);
+
       let candidate = new Date(now);
       candidate.setHours(hour, minute, 0, 0);
 
-      const diffDays = (dayIndex - candidate.getDay() + 7) % 7;
-      candidate.setDate(candidate.getDate() + diffDays);
+      const diff = (dayIndex - candidate.getDay() + 7) % 7;
+      candidate.setDate(candidate.getDate() + diff);
 
       if (candidate < now) candidate.setDate(candidate.getDate() + 7);
-
-      if (!soonest || candidate < soonest) {
-        soonest = candidate;
-      }
+      if (!soonest || candidate < soonest) soonest = candidate;
     }
 
     return soonest;
   }
 
-  // ✅ Boss processing tracker
-  const processedBosses = new Map();
+  // -------------------------
+  // FIREBASE LISTENER
+  // -------------------------
 
-  // ✅ Auto-reset or delete logic
-  async function autoResetOrDeleteBoss(entry, key) {
-    if (!entry.nextSpawn) return;
-    const nextSpawn = new Date(entry.nextSpawn);
-    if (isNaN(nextSpawn)) return;
-
-    const now = new Date();
-    const diffMs = now - nextSpawn;
-
-    const lastProc = processedBosses.get(key);
-    if (lastProc && now - lastProc < 120000) return;
-
-    // ±45 seconds tolerance
-    if (diffMs >= -10000 && diffMs <= 60000) {
-      processedBosses.set(key, now);
-      const bossRef = ref(db, "bosses/" + key);
-
-      // Hour-based boss → reset spawn timer
-      if (entry.bossHour && !entry.bossSchedule) {
-        // const newLastKilled = new Date();
-        // const nextSpawnTime = new Date(newLastKilled.getTime() + entry.bossHour * 60 * 60 * 1000);
-
-        // await update(bossRef, {
-        //   lastKilled: newLastKilled.toISOString(),
-        //   nextSpawn: nextSpawnTime.toISOString(),
-        // });
-        // console.log(`✅ Auto-reset done for ${entry.bossName}`);
-      }
-
-      // Fixed-schedule boss → delete entry after spawn
-      else if (entry.bossSchedule && !entry.bossHour) {
-        await remove(bossRef);
-        console.log(`🗑️ Auto-deleted schedule boss "${entry.bossName}" after spawn.`);
-      }
-
-      // Force refresh
-      setTimeout(monitorBosses, 2000);
-    }
-  }
-
-  // ✅ Weekly repopulation
-  async function repopulateWeeklyScheduleBosses(force = false) {
-    try {
-      const now = new Date();
-      const day = now.getDay();
-      const hour = now.getHours();
-
-      if (!force && !(day === 1 && hour >= 1)) {
-        console.log("⏸️ Not Monday 1AM yet — skipping repopulation.");
-        return;
-      }
-
-      const bossesRef = ref(db, "bosses");
-      const snapshot = await get(bossesRef);
-      const existing = [];
-
-      if (snapshot.exists()) {
-        snapshot.forEach((child) => {
-          const b = child.val();
-          if (b.bossSchedule) existing.push(`${b.bossName}_${b.bossSchedule}`);
-        });
-      }
-
-      let added = 0;
-      for (const b of fixedScheduleBosses) {
-        const key = `${b.bossName}_${b.bossSchedule}`;
-        if (!existing.includes(key)) {
-          const next = getNextScheduledSpawn(b.bossSchedule);
-          await push(bossesRef, {
-            bossName: b.bossName,
-            guild: b.guild,
-            lvl: b.lvl,
-            est: b.est,
-            bossSchedule: b.bossSchedule,
-            nextSpawn: next ? next.toISOString() : "",
-            bossHour: "null",
-            lastKilled: "",
-            warned10m: false,
-            spawnedPinged: false,
-            cycleReset: false
-          });
-          added++;
-        }
-      }
-
-      console.log(added > 0 ? `🆕 Repopulated ${added} bosses.` : "✅ All fixed bosses already exist.");
-    } catch (err) {
-      console.error("⚠️ Repopulation error:", err);
-    }
-  }
-
-  // ✅ Toggle between hour/schedule mode
-  function updateSpawnTypeUI() {
-    if (spawnHourType.checked) {
-      hourGroup.style.display = "block";
-      lastKilledField.style.display = "block";
-      scheduleGroup.style.display = "none";
-      bossSchedule.value = "";
-    } else {
-      lastKilledField.style.display = "none";
-      hourGroup.style.display = "none";
-      scheduleGroup.style.display = "block";
-      bossHour.value = "";
-    }
-    calcNextSpawn();
-  }
-  spawnHourType.addEventListener("change", updateSpawnTypeUI);
-  spawnScheduleType.addEventListener("change", updateSpawnTypeUI);
-  updateSpawnTypeUI();
-
-  // ✅ Submit handler
-  bossForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const guildVal = document.getElementById("guild").value || "FACTION";
-    const entry = {
-      bossName: bossName.value.trim().toUpperCase(),
-      bossHour: spawnHourType.checked ? bossHour.value : "null",
-      est: estimatedDeath.value,
-      lvl: bossLevel.value,
-      bossSchedule: spawnScheduleType.checked ? bossSchedule.value : "null",
-      lastKilled: lastKilled.value,
-      nextSpawn: nextSpawn.value,
-      guild: guildVal,
-    };
-
-    const key = editKey.value;
-    if (key) await update(ref(db, "bosses/" + key), entry);
-    else await set(push(ref(db, "bosses")), entry);
-
-    bossForm.reset();
-    nextSpawn.value = "";
-    editKey.value = "";
-    bossModal.hide();
-  });
-
-  // ✅ Clear form button
-  document.getElementById("btnAdd").addEventListener("click", clearBossForm);
-  function clearBossForm() {
-    bossForm.reset();
-    bossName.focus();
-    editKey.value = ""; // ✅ reset edit mode
-    nextSpawn.value = "";
-    console.log("Form cleared successfully!");
-  }
-
-  // ✅ Populate table
-  onValue(ref(db, "bosses"), (snapshot) => {
-    bossTable.innerHTML = "";
+  onValue(ref(db, "bosses"), snapshot => {
+    bossCache = {};
     const bosses = [];
 
-    snapshot.forEach((child) => {
+    snapshot.forEach(child => {
       const key = child.key;
       const b = child.val();
       b._key = key;
 
-      let ts = Date.parse(b.nextSpawn);
-      if (b.bossSchedule && !b.bossHour) {
-        const nextDate = getNextScheduledSpawn(b.bossSchedule);
-        ts = nextDate ? nextDate.getTime() : Infinity;
-        b.nextSpawn = nextDate ? nextDate.toLocaleString() : "--";
-      }
-
+      const ts = Date.parse(b.nextSpawn);
       b._ts = isNaN(ts) ? Infinity : ts;
-      bosses.push(b);
 
-      if (b.nextSpawn && b.nextSpawn !== "--") autoResetOrDeleteBoss(b, key);
+      bossCache[key] = b;
+      bosses.push(b);
     });
 
     bosses.sort((a, b) => a._ts - b._ts);
+    renderBossTable(bosses);
+  });
 
-    bosses.forEach((b) => {
+  // -------------------------
+  // TABLE RENDER
+  // -------------------------
+
+  function renderBossTable(bosses) {
+    bossTable.innerHTML = "";
+
+    bosses.forEach(b => {
       const tr = document.createElement("tr");
       tr.innerHTML = `
         <td>${b.bossName || "Unknown"}</td>
-        <td><span class="badge bg-secondary">${b.guild || "FFA"}</span></td>
-        <td>${b.bossHour || b.bossSchedule || "--"}</td>
+        <td>${b.guild || "Faction"}</td>
+        <td>${b.bossHour && b.bossHour !== "null" ? b.bossHour + "h" : b.bossSchedule || "--"}</td>
         <td>${b.lastKilled || "--"}</td>
         <td>${b.nextSpawn || "--"}</td>
         <td>
           <button class="btn btn-info btn-sm edit-btn" data-key="${b._key}">Edit</button>
           <button class="btn btn-warning btn-sm reset-btn" data-key="${b._key}">Reset</button>
-          <button class="btn btn-danger btn-sm delete-btn" data-id="${b._key}">Delete</button>
-        </td>`;
+          <button class="btn btn-danger btn-sm delete-btn" data-key="${b._key}">Delete</button>
+        </td>
+      `;
       bossTable.appendChild(tr);
-    });
-
-    // ✅ Manual repopulate button (safe duplicate-checked version)
-    const btnRepopulate = document.getElementById("btnRepopulate");
-    if (btnRepopulate) {
-      btnRepopulate.addEventListener("click", async () => {
-        if (!confirm("♻ Do you want to repopulate all fixed-schedule bosses now?")) return;
-
-        btnRepopulate.disabled = true;
-        const originalText = btnRepopulate.innerHTML;
-        btnRepopulate.innerHTML = "⏳ Repopulating...";
-
-        try {
-          const bossesRef = ref(db, "bosses");
-          const snapshot = await get(bossesRef);
-          const existing = [];
-
-          if (snapshot.exists()) {
-            snapshot.forEach((child) => {
-              const b = child.val();
-              if (b.nextSpawn)
-                existing.push(`${b.bossName}_${b.nextSpawn}`.toUpperCase());
-            });
-          }
-
-          let added = 0;
-          for (const b of fixedScheduleBosses) {
-
-            // Split multiple schedules
-            const schedules = b.bossSchedule.split(",").map(s => s.trim());
-
-            for (const scheduleEntry of schedules) {
-
-              const nextSpawn = getNextScheduledSpawn(scheduleEntry);
-              if (!nextSpawn) continue;
-
-              // ✅ Only add if inside this week
-              if (!isSameWeek(nextSpawn)) continue;
-
-              // Unique key per boss + exact spawn time
-              const key = `${b.bossName}_${nextSpawn.toISOString()}`.toUpperCase();
-
-              if (!existing.includes(key)) {
-
-                await push(bossesRef, {
-                  bossName: b.bossName,
-                  guild: b.guild,
-                  lvl: b.lvl,
-                  est: b.est,
-                  bossSchedule: scheduleEntry,
-                  nextSpawn: nextSpawn.toISOString(),
-                  bossHour: "null",
-                  lastKilled: "",
-                  warned10m: false,
-                  spawnedPinged: false,
-                  cycleReset: false
-                });
-
-                existing.push(key); // prevent duplicate in same run
-                added++;
-              }
-            }
-          }
-
-          alert(
-            added > 0
-              ? `✅ ${added} new boss${added > 1 ? "es" : ""} added successfully.`
-              : `✅ All fixed-schedule bosses already exist — no changes made.`
-          );
-
-          monitorBosses();
-        } catch (err) {
-          console.error("⚠️ Repopulate error:", err);
-          alert("⚠️ Something went wrong while repopulating!");
-        } finally {
-          btnRepopulate.disabled = false;
-          btnRepopulate.innerHTML = originalText;
-        }
-      });
-    }
-
-
-    // ✅ Edit button (fixed & clean version)
-    document.addEventListener("click", async (e) => {
-      if (!e.target.classList.contains("edit-btn")) return;
-
-      const key = e.target.dataset.key;
-      const bossRef = ref(db, "bosses/" + key);
-      const snap = await get(bossRef);
-
-      if (!snap.exists()) {
-        alert("⚠️ Boss not found!");
-        return;
-      }
-
-      const b = snap.val();
-
-      // Reset form first
-      document.getElementById("bossForm").reset();
-
-      // Change modal title
-      document.getElementById("modal-header-text").textContent = "Edit Boss";
-
-      // Fill basic fields
-      bossName.value = b.bossName || "";
-      document.getElementById("guild").value = b.guild || "Faction";
-      editKey.value = key;
-
-      // Clear both radio states first
-      spawnHourType.checked = false;
-      spawnScheduleType.checked = false;
-
-      // ✅ If Scheduled Boss
-      console.log(b.bossHour);
-      if (b.bossHour && b.bossHour !== "null") {
-        // ✅ Hour Interval Boss
-
-        spawnHourType.checked = true;
-
-        hourGroup.style.display = "block";
-        scheduleGroup.style.display = "none";
-        lastKilledField.style.display = "block";
-
-        bossHour.value = b.bossHour && b.bossHour !== "null"
-          ? b.bossHour
-          : "";
-
-      } else {
-        
-        spawnScheduleType.checked = true;
-
-        hourGroup.style.display = "none";
-        lastKilledField.style.display = "none";
-        scheduleGroup.style.display = "block";
-
-        bossSchedule.value = b.bossSchedule || "";
-      }
-
-      // Dates
-      lastKilled.value = toDatetimeLocalInput(b.lastKilled);
-      nextSpawn.value = toDatetimeLocalInput(b.nextSpawn);
-
-      bossModal.show();
-    });
-
-    // ✅ Delete button
-    document.querySelectorAll(".delete-btn").forEach((btn) => {
-      btn.addEventListener("click", async () => {
-        if (confirm("Delete this boss?")) {
-          await remove(ref(db, "bosses/" + btn.dataset.id));
-          monitorBosses();
-        }
-      });
-    });
-  });
-
-  spawnHourType.addEventListener("change", () => {
-    if (spawnHourType.checked) {
-      hourGroup.style.display = "block";
-      scheduleGroup.style.display = "none";
-    }
-  });
-
-  spawnScheduleType.addEventListener("change", () => {
-    if (spawnScheduleType.checked) {
-      hourGroup.style.display = "none";
-      scheduleGroup.style.display = "block";
-    }
-  });
-
-  // ✅ Continuous monitor
-  async function monitorBosses() {
-    const bossesRef = ref(db, "bosses");
-    const snapshot = await get(bossesRef);
-    if (!snapshot.exists()) return;
-
-    snapshot.forEach((child) => {
-      const key = child.key;
-      const b = child.val();
-      autoResetOrDeleteBoss(b, key);
     });
   }
 
-  // Run every 10 seconds
-  setInterval(monitorBosses, 10000);
-  window.addEventListener("load", () => {
-    repopulateWeeklyScheduleBosses();
-    monitorBosses();
+  // -------------------------
+  // GLOBAL CLICK HANDLER (ONE LISTENER ONLY)
+  // -------------------------
+
+  document.addEventListener("click", async (e) => {
+
+    // DELETE
+    if (e.target.classList.contains("delete-btn")) {
+      const key = e.target.dataset.key;
+      if (!confirm("Delete this boss?")) return;
+      await remove(ref(db, "bosses/" + key));
+      return;
+    }
+
+    // RESET
+    if (e.target.classList.contains("reset-btn")) {
+      const key = e.target.dataset.key;
+      const snap = await get(ref(db, "bosses/" + key));
+      if (!snap.exists()) return alert("Boss not found");
+
+      const entry = snap.val();
+      if (!confirm(`Reset ${entry.bossName}?`)) return;
+
+      const now = new Date();
+      let nextSpawnTime = null;
+
+      if (entry.bossHour && entry.bossHour !== "null") {
+        const hours = Number(entry.bossHour);
+        nextSpawnTime = new Date(now.getTime() + hours * 3600000);
+      } else if (entry.bossSchedule) {
+        nextSpawnTime = getNextScheduledSpawn(entry.bossSchedule);
+      }
+
+      if (!nextSpawnTime) return alert("Cannot calculate next spawn");
+
+      await update(ref(db, "bosses/" + key), {
+        lastKilled: now.toISOString(),
+        nextSpawn: nextSpawnTime.toISOString(),
+        warned10m: false,
+        spawnedPinged: false
+      });
+
+      return;
+    }
+
+    // EDIT
+    if (e.target.classList.contains("edit-btn")) {
+      const key = e.target.dataset.key;
+      const snap = await get(ref(db, "bosses/" + key));
+      if (!snap.exists()) return alert("Boss not found");
+
+      const b = snap.val();
+      editKey.value = key;
+
+      bossName.value = b.bossName || "";
+      bossLevel.value = b.lvl || "";
+      estimatedDeath.value = b.est || "";
+      document.getElementById("guild").value = b.guild || "Faction";
+
+      spawnHourType.checked = b.bossHour && b.bossHour !== "null";
+      spawnScheduleType.checked = !spawnHourType.checked;
+
+      bossHour.value = b.bossHour !== "null" ? b.bossHour : "";
+      bossSchedule.value = b.bossSchedule !== "null" ? b.bossSchedule : "";
+
+      lastKilled.value = toDatetimeLocalInput(b.lastKilled);
+      nextSpawn.value = toDatetimeLocalInput(b.nextSpawn);
+
+      updateSpawnTypeUI();
+      bossModal.show();
+    }
+
+    if (btnRepopulate) {
+      btnRepopulate.addEventListener("click", handleRepopulate);
+    }
+
   });
 
-  // Expose manual repopulate
-  window.repopulateWeeklyScheduleBosses = repopulateWeeklyScheduleBosses;
+  // -------------------------
+  // FORM SUBMIT
+  // -------------------------
+
+  bossForm.addEventListener("submit", async e => {
+    e.preventDefault();
+
+    const entry = {
+      bossName: bossName.value.trim().toUpperCase(),
+      bossHour: spawnHourType.checked ? bossHour.value : "null",
+      bossSchedule: spawnScheduleType.checked ? bossSchedule.value : "null",
+      lastKilled: lastKilled.value,
+      nextSpawn: nextSpawn.value,
+      est: estimatedDeath.value,
+      lvl: bossLevel.value,
+      guild: document.getElementById("guild").value
+    };
+
+    const key = editKey.value;
+    if (key) {
+      await update(ref(db, "bosses/" + key), entry);
+    } else {
+      await set(push(ref(db, "bosses")), entry);
+    }
+
+    bossForm.reset();
+    editKey.value = "";
+    bossModal.hide();
+  });
+
+  // -------------------------
+  // MONITOR (CACHE BASED)
+  // -------------------------
+
+  function monitorBosses() {
+    const now = Date.now();
+
+    for (const key in bossCache) {
+      const boss = bossCache[key];
+      const nextTime = Date.parse(boss.nextSpawn);
+      if (isNaN(nextTime)) continue;
+
+      const diff = now - nextTime;
+
+      if (diff >= -10000 && diff <= 60000) {
+        autoResetOrDeleteBoss(boss, key);
+      }
+    }
+  }
+
+  async function handleRepopulate() {
+
+    if (!confirm("♻ Do you want to repopulate this week's fixed-schedule bosses?"))
+      return;
+
+    btnRepopulate.disabled = true;
+    const originalText = btnRepopulate.innerHTML;
+    btnRepopulate.innerHTML = "⏳ Repopulating...";
+
+    try {
+      const bossesRef = ref(db, "bosses");
+      const snapshot = await get(bossesRef);
+      const existing = new Set();
+
+      if (snapshot.exists()) {
+        snapshot.forEach(child => {
+          const b = child.val();
+          if (b.nextSpawn) {
+            const key = `${b.bossName}_${b.nextSpawn}`.toUpperCase();
+            existing.add(key);
+          }
+        });
+      }
+
+      let added = 0;
+
+      for (const b of fixedScheduleBosses) {
+
+        const schedules = b.bossSchedule.split(",").map(s => s.trim());
+
+        for (const scheduleEntry of schedules) {
+
+          const nextSpawn = getNextScheduledSpawn(scheduleEntry);
+          if (!nextSpawn) continue;
+
+          // ✅ Only this week
+          if (!isSameWeek(nextSpawn)) continue;
+
+          const uniqueKey =
+            `${b.bossName}_${nextSpawn.toISOString()}`.toUpperCase();
+
+          if (!existing.has(uniqueKey)) {
+
+            await push(bossesRef, {
+              bossName: b.bossName,
+              guild: b.guild,
+              lvl: b.lvl,
+              est: b.est,
+              bossSchedule: scheduleEntry,
+              nextSpawn: nextSpawn.toISOString(),
+              bossHour: "null",
+              lastKilled: "",
+              warned10m: false,
+              spawnedPinged: false,
+              cycleReset: false
+            });
+
+            existing.add(uniqueKey);
+            added++;
+          }
+        }
+      }
+
+      alert(
+        added > 0
+          ? `✅ ${added} new boss${added > 1 ? "es" : ""} added successfully.`
+          : "✅ All fixed-schedule bosses already exist for this week."
+      );
+
+    } catch (err) {
+      console.error("⚠️ Repopulate error:", err);
+      alert("⚠️ Something went wrong while repopulating!");
+    } finally {
+      btnRepopulate.disabled = false;
+      btnRepopulate.innerHTML = originalText;
+    }
+  }
+
+  async function autoResetOrDeleteBoss(entry, key) {
+    const lastProc = processedBosses.get(key);
+    const now = Date.now();
+    if (lastProc && now - lastProc < 120000) return;
+
+    processedBosses.set(key, now);
+
+    if (entry.bossSchedule && (!entry.bossHour || entry.bossHour === "null")) {
+      await remove(ref(db, "bosses/" + key));
+    }
+  }
+  
+  setInterval(monitorBosses, 5000);
+
+  // -------------------------
+  // UI TOGGLE
+  // -------------------------
+
+  function updateSpawnTypeUI() {
+    hourGroup.style.display = spawnHourType.checked ? "block" : "none";
+    lastKilledField.style.display = spawnHourType.checked ? "block" : "none";
+    scheduleGroup.style.display = spawnScheduleType.checked ? "block" : "none";
+  }
+
+  spawnHourType.addEventListener("change", updateSpawnTypeUI);
+  spawnScheduleType.addEventListener("change", updateSpawnTypeUI);
+  window.addEventListener("load", () => {
+    handleRepopulate();
+  });
+  updateSpawnTypeUI();
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
