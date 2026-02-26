@@ -21,6 +21,8 @@ export function initBossList() {
   const bossSchedule = document.getElementById("bossSchedule");
   const spawnHourType = document.getElementById("spawnHourType");
   const spawnScheduleType = document.getElementById("spawnScheduleType");
+  const estimatedDeath = document.getElementById("estimatedDeath");
+  const bossLevel = document.getElementById("bossLevel");
 
   // ✅ Fixed schedule bosses list
   const fixedScheduleBosses = [
@@ -255,6 +257,8 @@ export function initBossList() {
     const entry = {
       bossName: bossName.value.trim().toUpperCase(),
       bossHour: spawnHourType.checked ? bossHour.value : "null",
+      est: estimatedDeath.value,
+      lvl: bossLevel.value,
       bossSchedule: spawnScheduleType.checked ? bossSchedule.value : "null",
       lastKilled: lastKilled.value,
       nextSpawn: nextSpawn.value,
@@ -402,26 +406,6 @@ export function initBossList() {
     }
 
 
-    // ✅ Edit button
-    document.querySelectorAll(".edit-btn").forEach((btn) => {
-      btn.addEventListener("click", async () => {
-        const key = btn.dataset.key;
-        const bossRef = ref(db, "bosses/" + key);
-        const snap = await get(bossRef);
-        if (!snap.exists()) return alert("⚠️ Boss not found!");
-        const b = snap.val();
-
-        bossName.value = b.bossName || "";
-        bossHour.value = b.bossHour || "null";
-        lastKilled.value = toDatetimeLocalInput(b.lastKilled);
-        nextSpawn.value = toDatetimeLocalInput(b.nextSpawn);
-        document.getElementById("guild").value = b.guild || "FFA";
-        editKey.value = key;
-
-        bossModal.show();
-      });
-    });
-
     // ✅ Edit button (fixed & clean version)
     document.addEventListener("click", async (e) => {
       if (!e.target.classList.contains("edit-btn")) return;
@@ -533,6 +517,7 @@ export function initBossList() {
   // Expose manual repopulate
   window.repopulateWeeklyScheduleBosses = repopulateWeeklyScheduleBosses;
 }
+
 
 
 
