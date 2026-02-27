@@ -285,7 +285,7 @@ async function fetchAndRenderBosses() {
       LIVERA: "img/livera_fool.png", ARANEO: "img/araneo.png", NEUTRO: "img/neutro_fool.png",
       SAPHIRUS: "img/saphirus.png", THYMELE: "img/thymele.png", UNDOMIEL: "img/undomiel.png",
       WANNITAS: "img/wannitas.png", DUPLICAN: "img/duplican.png", METUS: "img/metus_fool.png",
-      AMENTIS: "img/amentis.png", CLEMANTIS: "img/clemantis.png", TITORE: "img/titore.png",
+      AMENTIS: "img/amentis.png", CLEMANTIS: "img/clemantis.png", TITORE: "img/titore_fool.png",
       GARETH: "img/gareth.png", LADYDALIA: "img/lady_dalia.png", GENAQULUES: "img/gen_aquleus.png",
       GENERALAQULES: "img/gen_aquleus.png", AURAQ: "img/auraq_fool.png", MILAVY: "img/milavy.png",
       CHAIFLOCK: "img/chaiflock.png", RODERICK: "img/roderick_fool.png", RINGOR: "img/ringor_fool.png",
@@ -336,7 +336,7 @@ async function fetchAndRenderBosses() {
     title.textContent = b.bossName || "Unknown";
     nameRow.appendChild(title);
 
-    const lvl = "Lv." + b.lvl || "Lv.0";
+    const lvl = "Lv." + b.lvl || "0";
     const lvlTag = document.createElement("span");
     lvlTag.textContent = lvl;
     lvlTag.className = `level-badge ${guild}`;
@@ -507,6 +507,7 @@ timezoneSelect.addEventListener("change", () => {
 document.addEventListener("visibilitychange", () => {
   if (!document.hidden) fetchAndRenderBosses();
 });
+
 
 
 
