@@ -292,7 +292,7 @@ async function fetchAndRenderBosses() {
       BENJI: "img/benji_fool.png", SHULIAR: "img/shuliar.png", LARBA: "img/larba_fool.png",
       GENAQULEUS: "img/gen_aquleus.png", BARON: "img/baron_fool.png", CATENA: "img/catena.png",
       ORDO: "img/ordo.png", SECRETA: "img/secreta.png", SUPORE: "img/supore.png", ASTA: "img/asta.png",
-      LIBITINA: "img/libitina.png", RAJAKETH: "img/rajaketh.png",
+      LIBITINA: "img/libitina.png", RAKAJETH: "img/rakajeth.png",  TUMIER: "img/tumier.png"
     };
 
     const normalizedName = b.bossName?.toUpperCase().replace(/[^A-Z0-9]/g, "") || "";
@@ -507,6 +507,7 @@ timezoneSelect.addEventListener("change", () => {
 document.addEventListener("visibilitychange", () => {
   if (!document.hidden) fetchAndRenderBosses();
 });
+
 
 
 
