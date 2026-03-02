@@ -434,7 +434,7 @@ function createBossCard(b, sectionColor) {
         sendDiscordMessage(discordTemplate(
           b.bossName,
           "⏳ Status: **Spawning in approximately 10 minutes!**",
-          "Level:" + b.lvl,
+          "🎖️ Level:" + b.lvl,
         ));
       }
     }
@@ -446,7 +446,7 @@ function createBossCard(b, sectionColor) {
         sendDiscordMessage(discordTemplate(
           b.bossName,
           "🔥 Status: **SPAWNED!**",
-          "Level:" + b.lvl,
+          "🎖️ Level:" + b.lvl,
         ));
       }
     }
@@ -489,4 +489,5 @@ timezoneSelect.addEventListener("change", () => {
 document.addEventListener("visibilitychange", () => {
   if (!document.hidden) fetchAndRenderBosses();
 });
+
 
