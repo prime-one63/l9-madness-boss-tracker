@@ -395,8 +395,7 @@ function createBossCard(b, sectionColor) {
 
     /* 🔁 AUTO RESET (bossHour) */
     if (
-      b.bossHour &&
-      b.bossHour !== "null" &&
+      (b.bossHour || b.bossHour !== "null") &&
       (!b.bossSchedule || b.bossSchedule === "" || b.bossSchedule === "null") &&
       diff <= -(estMinutes * 60000) &&
       !b.cycleReset
@@ -418,8 +417,7 @@ function createBossCard(b, sectionColor) {
 
     /* ❌ AUTO REMOVE (bossSchedule) */
     if (
-      b.bossSchedule &&
-      b.bossSchedule !== "null" &&
+      (b.bossSchedule || b.bossSchedule !== "null") &&
       (!b.bossHour || b.bossHour === "" || b.bossHour === "null") &&
       diff <= -(estMinutes * 60000)
     ) {
@@ -491,6 +489,7 @@ timezoneSelect.addEventListener("change", () => {
 document.addEventListener("visibilitychange", () => {
   if (!document.hidden) fetchAndRenderBosses();
 });
+
 
 
 
