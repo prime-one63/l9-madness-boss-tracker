@@ -80,12 +80,13 @@ function sendDiscordMessage(msg) {
   });
 }
 
-function discordTemplate(title, status) {
+function discordTemplate(title, status, lvl) {
   return (
 `📢 @everyone
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-                                    🐦‍🔥 **${title}** 🐦‍🔥
+                                 🐦‍🔥 **${title}** 🐦‍🔥
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+${lvl}
 ${status}
 📆 Time: <t:${Math.floor(Date.now()/1000)}:F>
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`
@@ -432,7 +433,8 @@ function createBossCard(b, sectionColor) {
       if (result.committed) {
         sendDiscordMessage(discordTemplate(
           b.bossName,
-          "⏳ Status: **Spawning in approximately 10 minutes!**"
+          "⏳ Status: **Spawning in approximately 10 minutes!**",
+          "Level:" + b.lvl,
         ));
       }
     }
@@ -443,7 +445,8 @@ function createBossCard(b, sectionColor) {
       if (result.committed) {
         sendDiscordMessage(discordTemplate(
           b.bossName,
-          "🔥 Status: **SPAWNED!**"
+          "🔥 Status: **SPAWNED!**",
+          "Level:" + b.lvl,
         ));
       }
     }
@@ -486,3 +489,4 @@ timezoneSelect.addEventListener("change", () => {
 document.addEventListener("visibilitychange", () => {
   if (!document.hidden) fetchAndRenderBosses();
 });
+
