@@ -401,9 +401,11 @@ function createBossCard(b, sectionColor) {
       diff <= -(estMinutes * 60000) &&
       !b.cycleReset
     ) {
+      const now = new Date(); 
       const newNextSpawn = new Date(now + (b.bossHour * 60 * 60 * 1000));
 
       await update(ref(db, `bosses/${b._key}`), {
+        lastKilled: now.toISOString(),
         nextSpawn: newNextSpawn.toISOString(),
         warned10m: false,
         spawnedPinged: false,
@@ -422,8 +424,8 @@ function createBossCard(b, sectionColor) {
       diff <= -(estMinutes * 60000)
     ) {
       await remove(ref(db, `bosses/${b._key}`));
-      clearInterval(countdownTimers.get(b._key));
-      countdownTimers.delete(b._key);
+      // clearInterval(countdownTimers.get(b._key));
+      // countdownTimers.delete(b._key);
       return;
     }
 
@@ -489,5 +491,6 @@ timezoneSelect.addEventListener("change", () => {
 document.addEventListener("visibilitychange", () => {
   if (!document.hidden) fetchAndRenderBosses();
 });
+
 
 
