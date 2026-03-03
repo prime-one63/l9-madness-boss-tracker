@@ -422,8 +422,8 @@ function createBossCard(b, sectionColor) {
       diff <= -(estMinutes * 60000)
     ) {
       await remove(ref(db, `bosses/${b._key}`));
-      // clearInterval(countdownTimers.get(b._key));
-      // countdownTimers.delete(b._key);
+      clearInterval(countdownTimers.get(b._key));
+      countdownTimers.delete(b._key);
       return;
     }
 
@@ -489,6 +489,7 @@ timezoneSelect.addEventListener("change", () => {
 document.addEventListener("visibilitychange", () => {
   if (!document.hidden) fetchAndRenderBosses();
 });
+
 
 
 
