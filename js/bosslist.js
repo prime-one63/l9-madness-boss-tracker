@@ -1,13 +1,21 @@
 import { db } from "./firebase.js";
-import { ref,push, set, update, remove, onValue, get }
-from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import {
+    ref,
+    push,
+    set,
+    update,
+    remove,
+    get,
+    onChildAdded,
+    onChildChanged,
+    onChildRemoved
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
 export function initBossList() {
 
     let bossCache = {};
     const processedBosses = new Map();
 
-    // DOM
     const bossForm = document.getElementById("bossForm");
     const bossTable = document.querySelector("#bossTable tbody");
     const bossModal = new bootstrap.Modal(document.getElementById("bossModal"));
@@ -31,106 +39,61 @@ export function initBossList() {
 
     const btnRepopulate = document.getElementById("btnRepopulate");
 
-    // -------------------------
-    // FIXED SCHEDULE BOSSES
-    // -------------------------
+    const bossImageMap = {
+        VENATUS: "img/venatus.png",
+        VIORENT: "img/viorent.png",
+        EGO: "img/ego.png",
+        LIVERA: "img/livera_fool.png",
+        ARANEO: "img/araneo.png",
+        NEUTRO: "img/neutro_fool.png",
+        SAPHIRUS: "img/saphirus.png",
+        THYMELE: "img/thymele.png",
+        UNDOMIEL: "img/undomiel.png",
+        WANNITAS: "img/wannitas.png",
+        DUPLICAN: "img/duplican.png",
+        METUS: "img/metus_fool.png",
+        AMENTIS: "img/amentis.png",
+        CLEMANTIS: "img/clemantis.png",
+        TITORE: "img/titore.png",
+        GARETH: "img/gareth.png",
+        LADYDALIA: "img/lady_dalia.png",
+        GENAQULUES: "img/gen_aquleus.png",
+        GENERALAQULES: "img/gen_aquleus.png",
+        GENAQULEUS: "img/gen_aquleus.png",
+        AURAQ: "img/auraq_fool.png",
+        MILAVY: "img/milavy.png",
+        CHAIFLOCK: "img/chaiflock.png",
+        RODERICK: "img/roderick_fool.png",
+        RINGOR: "img/ringor_fool.png",
+        BENJI: "img/benji_fool.png",
+        SHULIAR: "img/shuliar.png",
+        LARBA: "img/larba_fool.png",
+        BARON: "img/baron_fool.png",
+        CATENA: "img/catena.png",
+        ORDO: "img/ordo.png",
+        SECRETA: "img/secreta.png",
+        SUPORE: "img/supore.png",
+        ASTA: "img/asta.png",
+        LIBITINA: "img/libitina.png",
+        RAKAJETH: "img/rakajeth.png",
+        TUMIER: "img/tumier.png"
+    };
 
-    const fixedScheduleBosses = [{
-            bossName: "CLEMANTIS",
-            guild: "Faction",
-            bossSchedule: "Monday 11:30, Thursday 19:00",
-            lvl: "70",
-            est: "2"
-        },
-        {
-            bossName: "LIBITINA",
-            guild: "Faction",
-            bossSchedule: "Monday 21:00, Saturday 21:00",
-            lvl: "130",
-            est: "2"
-        },
-        {
-            bossName: "RAKAJETH",
-            guild: "Faction",
-            bossSchedule: "Tuesday 22:00, Sunday 19:00",
-            lvl: "130",
-            est: "2"
-        },
-        {
-            bossName: "SAPHIRUS",
-            guild: "Faction",
-            bossSchedule: "Sunday 17:00, Tuesday 11:30",
-            lvl: "80",
-            est: "2"
-        },
-        {
-            bossName: "NEUTRO",
-            guild: "Faction",
-            bossSchedule: "Tuesday 19:00, Thursday 11:30",
-            lvl: "80",
-            est: "2"
-        },
-        {
-            bossName: "THYMELE",
-            guild: "Faction",
-            bossSchedule: "Monday 19:00, Wednesday 11:30",
-            lvl: "85",
-            est: "2"
-        },
-        {
-            bossName: "MILAVY",
-            guild: "Faction",
-            bossSchedule: "Saturday 15:00",
-            lvl: "90",
-            est: "2"
-        },
-        {
-            bossName: "RINGOR",
-            guild: "Faction",
-            bossSchedule: "Saturday 17:00",
-            lvl: "95",
-            est: "2"
-        },
-        {
-            bossName: "RODERICK",
-            guild: "Faction",
-            bossSchedule: "Friday 19:00",
-            lvl: "95",
-            est: "2"
-        },
-        {
-            bossName: "AURAQ",
-            guild: "Faction",
-            bossSchedule: "Friday 22:00, Wednesday 21:00",
-            lvl: "100",
-            est: "2"
-        },
-        {
-            bossName: "CHAIFLOCK",
-            guild: "Faction",
-            bossSchedule: "Saturday 22:00",
-            lvl: "120",
-            est: "2"
-        },
-        {
-            bossName: "BENJI",
-            guild: "Faction",
-            bossSchedule: "Sunday 21:00",
-            lvl: "120",
-            est: "2"
-        },
-        {
-            bossName: "TUMIER",
-            guild: "Faction",
-            bossSchedule: "Sunday 19:00",
-            lvl: "140",
-            est: "2"
-        }
+    const fixedScheduleBosses = [
+        { bossName: "CLEMANTIS", guild: "Faction", bossSchedule: "Monday 11:30, Thursday 19:00", lvl: "70", est: "2" },
+        { bossName: "LIBITINA", guild: "Faction", bossSchedule: "Monday 21:00, Saturday 21:00", lvl: "130", est: "2" },
+        { bossName: "RAKAJETH", guild: "Faction", bossSchedule: "Tuesday 22:00, Sunday 19:00", lvl: "130", est: "2" },
+        { bossName: "SAPHIRUS", guild: "Faction", bossSchedule: "Sunday 17:00, Tuesday 11:30", lvl: "80", est: "2" },
+        { bossName: "NEUTRO", guild: "Faction", bossSchedule: "Tuesday 19:00, Thursday 11:30", lvl: "80", est: "2" },
+        { bossName: "THYMELE", guild: "Faction", bossSchedule: "Monday 19:00, Wednesday 11:30", lvl: "85", est: "2" },
+        { bossName: "MILAVY", guild: "Faction", bossSchedule: "Saturday 15:00", lvl: "90", est: "2" },
+        { bossName: "RINGOR", guild: "Faction", bossSchedule: "Saturday 17:00", lvl: "95", est: "2" },
+        { bossName: "RODERICK", guild: "Faction", bossSchedule: "Friday 19:00", lvl: "95", est: "2" },
+        { bossName: "AURAQ", guild: "Faction", bossSchedule: "Friday 22:00, Wednesday 21:00", lvl: "100", est: "2" },
+        { bossName: "CHAIFLOCK", guild: "Faction", bossSchedule: "Saturday 22:00", lvl: "120", est: "2" },
+        { bossName: "BENJI", guild: "Faction", bossSchedule: "Sunday 21:00", lvl: "120", est: "2" },
+        { bossName: "TUMIER", guild: "Faction", bossSchedule: "Sunday 19:00", lvl: "140", est: "2" }
     ];
-
-    // -------------------------
-    // UTILITIES
-    // -------------------------
 
     function toISO(dateStr) {
         if (!dateStr) return "";
@@ -139,10 +102,13 @@ export function initBossList() {
 
     function toDatetimeLocalInput(stored) {
         if (!stored) return "";
+
         const d = new Date(stored);
         if (isNaN(d)) return "";
+
         const pad = n => String(n).padStart(2, "0");
-        return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+
+        return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
     }
 
     function isSameWeek(date) {
@@ -158,7 +124,6 @@ export function initBossList() {
         end.setHours(23, 59, 59, 999);
 
         return date >= start && date <= end;
-
     }
 
     function getNextScheduledSpawn(scheduleStr) {
@@ -190,16 +155,10 @@ export function initBossList() {
             if (candidate < now) candidate.setDate(candidate.getDate() + 7);
 
             if (!soonest || candidate < soonest) soonest = candidate;
-
         }
 
         return soonest;
-
     }
-
-    // -------------------------
-    // CALCULATE NEXT SPAWN
-    // -------------------------
 
     function calcNextSpawn() {
 
@@ -217,7 +176,6 @@ export function initBossList() {
                 d.setHours(d.getHours() + hours);
 
                 nextSpawn.value = toDatetimeLocalInput(d);
-
             }
 
         } else if (isScheduleBased) {
@@ -228,75 +186,87 @@ export function initBossList() {
 
                 const next = getNextScheduledSpawn(schedule);
                 if (next) nextSpawn.value = toDatetimeLocalInput(next);
-
             }
-
         }
-
     }
 
-    // -------------------------
-    // FIREBASE LISTENER
-    // -------------------------
+    const bossesRef = ref(db, "bosses");
 
-    onValue(ref(db, "bosses"), snapshot => {
+    onChildAdded(bossesRef, (snapshot) => {
 
-        bossCache = {};
-        const bosses = [];
+        const b = snapshot.val();
+        b._key = snapshot.key;
 
-        snapshot.forEach(child => {
+        bossCache[b._key] = b;
 
-            const key = child.key;
-            const b = child.val();
-
-            b._key = key;
-            b._ts = Date.parse(b.nextSpawn) || Infinity;
-
-            bossCache[key] = b;
-            bosses.push(b);
-
-        });
-
-        bosses.sort((a, b) => a._ts - b._ts);
-
-        renderBossTable(bosses);
-
+        renderBossCards(Object.values(bossCache));
     });
 
-    // -------------------------
-    // RENDER TABLE
-    // -------------------------
+    onChildChanged(bossesRef, (snapshot) => {
 
-    function renderBossTable(bosses) {
+        const b = snapshot.val();
+        b._key = snapshot.key;
 
-        bossTable.innerHTML = "";
+        bossCache[b._key] = b;
+
+        renderBossCards(Object.values(bossCache));
+    });
+
+    onChildRemoved(bossesRef, (snapshot) => {
+
+        delete bossCache[snapshot.key];
+
+        renderBossCards(Object.values(bossCache));
+    });
+
+    function renderBossCards(bosses) {
+
+        const grid = document.getElementById("bossGrid");
+        grid.innerHTML = "";
+
+        bosses.sort((a, b) => {
+            const ta = Date.parse(a.nextSpawn) || Infinity;
+            const tb = Date.parse(b.nextSpawn) || Infinity;
+            return ta - tb;
+        });
 
         bosses.forEach(b => {
+            const normalizedName =
+                b.bossName?.toUpperCase().replace(/[^A-Z0-9]/g, "") || "";
+            const bossImg = bossImageMap[normalizedName] || "img/default.png";
+            const card = document.createElement("div");
+            card.className = "tracker-card";
 
-            const tr = document.createElement("tr");
+            card.innerHTML = `
+                <div class="tracker-header">
 
-            tr.innerHTML = `
-<td>${b.bossName||"Unknown"}</td>
-<td><span class="badge bg-secondary">${b.guild||"Faction"}</span></td>
-<td>${b.bossHour&&b.bossHour!=="null"?b.bossHour+"h":b.bossSchedule||"--"}</td>
-<td>${b.lastKilled||"--"}</td>
-<td>${b.nextSpawn||"--"}</td>
-<td>
-<button class="btn btn-info btn-sm edit-btn" data-key="${b._key}">Edit</button>
-<button class="btn btn-warning btn-sm reset-btn" data-key="${b._key}">Reset</button>
-<button class="btn btn-danger btn-sm delete-btn" data-key="${b._key}">Delete</button>
-</td>
-`;
+                    <img src="${bossImg}" class="boss-img">
 
-            bossTable.appendChild(tr);
+                    <div class="boss-info">
+                        <div class="tracker-title">${b.bossName || "Unknown"}</div>
+                        <div class="boss-level">Level ${b.lvl || "--"}</div>
+                    </div>
+
+                </div>
+
+                <div>Guild: ${b.guild || "Faction"}</div>
+                <div>Spawn: ${b.bossHour ? b.bossHour + "h" : b.bossSchedule}</div>
+
+                <div>Next Spawn:</div>
+                <div>${b.nextSpawn || "--"}</div>
+
+                <div class="tracker-actions">
+                    <button class="btn btn-info btn-sm edit-btn" data-key="${b._key}">Edit</button>
+                    <button class="btn btn-warning btn-sm reset-btn" data-key="${b._key}">Reset</button>
+                    <button class="btn btn-danger btn-sm delete-btn" data-key="${b._key}">Delete</button>
+                </div>
+            `;
+
+            grid.appendChild(card);
 
         });
 
     }
-
-    // -------------------------
-    // GLOBAL CLICK HANDLER
-    // -------------------------
 
     document.addEventListener("click", async e => {
 
@@ -306,7 +276,6 @@ export function initBossList() {
             if (!confirm("Delete this boss?")) return;
 
             await remove(ref(db, "bosses/" + key));
-
         }
 
         if (e.target.classList.contains("reset-btn")) {
@@ -324,26 +293,19 @@ export function initBossList() {
             let nextSpawnTime = null;
 
             if (entry.bossHour && entry.bossHour !== "null") {
-
                 nextSpawnTime = new Date(now.getTime() + entry.bossHour * 3600000);
-
             } else if (entry.bossSchedule) {
-
                 nextSpawnTime = getNextScheduledSpawn(entry.bossSchedule);
-
             }
 
             if (!nextSpawnTime) return;
 
             await update(ref(db, "bosses/" + key), {
-
                 lastKilled: now.toISOString(),
                 nextSpawn: nextSpawnTime.toISOString(),
                 warned10m: false,
                 spawnedPinged: false
-
             });
-
         }
 
         if (e.target.classList.contains("edit-btn")) {
@@ -375,14 +337,8 @@ export function initBossList() {
             updateSpawnTypeUI();
 
             bossModal.show();
-
         }
-
     });
-
-    // -------------------------
-    // FORM SUBMIT
-    // -------------------------
 
     bossForm.addEventListener("submit", async e => {
 
@@ -401,30 +357,20 @@ export function initBossList() {
             est: estimatedDeath.value,
             lvl: bossLevel.value,
             guild: document.getElementById("guild").value
-
         };
 
         const key = editKey.value;
 
         if (key) {
-
             await update(ref(db, "bosses/" + key), entry);
-
         } else {
-
             await set(push(ref(db, "bosses")), entry);
-
         }
 
         bossForm.reset();
         editKey.value = "";
         bossModal.hide();
-
     });
-
-    // -------------------------
-    // MONITOR BOSSES
-    // -------------------------
 
     function monitorBosses() {
 
@@ -440,13 +386,9 @@ export function initBossList() {
             const diff = now - nextTime;
 
             if (diff >= -10000 && diff <= 60000) {
-
                 autoResetOrDeleteBoss(boss, key);
-
             }
-
         }
-
     }
 
     async function autoResetOrDeleteBoss(entry, key) {
@@ -461,18 +403,11 @@ export function initBossList() {
         if (processedBosses.size > 500) processedBosses.clear();
 
         if (entry.bossSchedule && (!entry.bossHour || entry.bossHour === "null")) {
-
             await remove(ref(db, "bosses/" + key));
-
         }
-
     }
 
     setInterval(monitorBosses, 5000);
-
-    // -------------------------
-    // REPOPULATE
-    // -------------------------
 
     async function handleRepopulate() {
 
@@ -494,13 +429,9 @@ export function initBossList() {
                     const b = child.val();
 
                     if (b.nextSpawn) {
-
                         existing.add(`${b.bossName}_${b.nextSpawn}`);
-
                     }
-
                 });
-
             }
 
             let added = 0;
@@ -536,16 +467,12 @@ export function initBossList() {
                             warned10m: false,
                             spawnedPinged: false,
                             cycleReset: false
-
                         });
 
                         existing.add(key);
                         added++;
-
                     }
-
                 }
-
             }
 
             alert(`${added} bosses added`);
@@ -554,31 +481,20 @@ export function initBossList() {
 
             console.error(err);
             alert("Repopulate error");
-
         }
 
         btnRepopulate.disabled = false;
-
     }
-
-    // BUTTON LISTENER (FIXED)
 
     if (btnRepopulate) {
-
         btnRepopulate.addEventListener("click", handleRepopulate);
-
     }
-
-    // -------------------------
-    // UI TOGGLE
-    // -------------------------
 
     function updateSpawnTypeUI() {
 
         hourGroup.style.display = spawnHourType.checked ? "block" : "none";
         lastKilledField.style.display = spawnHourType.checked ? "block" : "none";
         scheduleGroup.style.display = spawnScheduleType.checked ? "block" : "none";
-
     }
 
     bossHour.addEventListener("input", calcNextSpawn);
@@ -586,21 +502,16 @@ export function initBossList() {
     lastKilled.addEventListener("input", calcNextSpawn);
 
     spawnHourType.addEventListener("change", () => {
-
         updateSpawnTypeUI();
         calcNextSpawn();
-
     });
 
     spawnScheduleType.addEventListener("change", () => {
-
         updateSpawnTypeUI();
         calcNextSpawn();
-
     });
 
     updateSpawnTypeUI();
 
     window.addEventListener("load", handleRepopulate);
-
 }
