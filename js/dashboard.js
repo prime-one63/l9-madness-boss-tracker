@@ -393,11 +393,13 @@ function createBossCard(b, sectionColor) {
     const now = Date.now();
     const diff = b._ts - now;
     const estMinutes = b.est || 5;
+    const isHourBoss = b.bossHour && b.bossHour !== "null";
+    const isScheduleBoss = b.bossSchedule && b.bossSchedule !== "null";
 
     /* 🔁 AUTO RESET (bossHour) */
     if (
-      (b.bossHour || b.bossHour !== "null") &&
-      (!b.bossSchedule || b.bossSchedule === "" || b.bossSchedule === "null") &&
+      isHourBoss &&
+      !isScheduleBoss &&
       diff <= -(estMinutes * 60000) &&
       !b.cycleReset
     ) {
@@ -409,7 +411,7 @@ function createBossCard(b, sectionColor) {
         nextSpawn: newNextSpawn.toISOString(),
         warned10m: false,
         spawnedPinged: false,
-        cycleReset: true
+        cycleReset: false
       });
 
       b._ts = newNextSpawn.getTime();
@@ -418,8 +420,8 @@ function createBossCard(b, sectionColor) {
 
     /* ❌ AUTO REMOVE (bossSchedule) */
     if (
-      (b.bossSchedule || b.bossSchedule !== "null") &&
-      (!b.bossHour || b.bossHour === "" || b.bossHour === "null") &&
+      isScheduleBoss &&
+      !isHourBoss &&
       diff <= -(estMinutes * 60000)
     ) {
       await remove(ref(db, `bosses/${b._key}`));
@@ -492,6 +494,7 @@ timezoneSelect.addEventListener("change", () => {
 document.addEventListener("visibilitychange", () => {
   if (!document.hidden) fetchAndRenderBosses();
 });
+
 
 
 
