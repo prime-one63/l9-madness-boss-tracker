@@ -411,7 +411,7 @@ function createBossCard(b, sectionColor) {
         nextSpawn: newNextSpawn.toISOString(),
         warned10m: false,
         spawnedPinged: false,
-        cycleReset: false
+        cycleReset: true
       });
 
       b._ts = newNextSpawn.getTime();
@@ -494,6 +494,7 @@ timezoneSelect.addEventListener("change", () => {
 document.addEventListener("visibilitychange", () => {
   if (!document.hidden) fetchAndRenderBosses();
 });
+
 
 
 
