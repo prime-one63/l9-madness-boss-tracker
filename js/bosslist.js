@@ -382,28 +382,6 @@ export function initBossList() {
 
             const nextTime = Date.parse(boss.nextSpawn);
             if (isNaN(nextTime)) continue;
-
-            const diff = now - nextTime;
-
-            if (diff >= -10000 && diff <= 60000) {
-                autoResetOrDeleteBoss(boss, key);
-            }
-        }
-    }
-
-    async function autoResetOrDeleteBoss(entry, key) {
-
-        const lastProc = processedBosses.get(key);
-        const now = Date.now();
-
-        if (lastProc && now - lastProc < 120000) return;
-
-        processedBosses.set(key, now);
-
-        if (processedBosses.size > 500) processedBosses.clear();
-
-        if (entry.bossSchedule && (!entry.bossHour || entry.bossHour === "null")) {
-            await remove(ref(db, "bosses/" + key));
         }
     }
 
