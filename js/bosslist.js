@@ -290,16 +290,7 @@ export function initBossList() {
             if (!confirm(`Reset ${entry.bossName}?`)) return;
 
             const now = new Date();
-            let nextSpawnTime = null;
-
-            if (entry.bossHour && entry.bossHour !== "null") {
-                nextSpawnTime = new Date(now.getTime() + entry.bossHour * 3600000);
-            } else if (entry.bossSchedule) {
-                nextSpawnTime = getNextScheduledSpawn(entry.bossSchedule);
-            }
-
-            if (!nextSpawnTime) return;
-
+            const nextSpawnTime = new Date(now.getTime() + entry.bossHour * 60 * 60 * 1000);
             await update(ref(db, "bosses/" + key), {
                 lastKilled: now.toISOString(),
                 nextSpawn: nextSpawnTime.toISOString(),
@@ -493,3 +484,4 @@ export function initBossList() {
 
     window.addEventListener("load", handleRepopulate);
 }
+
