@@ -1,5 +1,5 @@
 import { db } from "./firebase.js";
-import { ref, get, update, runTransaction, remove } 
+import { ref, get, update, runTransaction } 
 from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
 
@@ -395,19 +395,6 @@ function createBossCard(b, sectionColor) {
     const estMinutes = b.est || 5;
     const isHourBoss = b.bossHour && b.bossHour !== "null";
     const isScheduleBoss = b.bossSchedule && b.bossSchedule !== "null";
-
-
-    /* ❌ AUTO REMOVE (bossSchedule) */
-    if (
-      isScheduleBoss &&
-      !isHourBoss &&
-      diff <= -(estMinutes * 60000)
-    ) {
-      await remove(ref(db, `bosses/${b._key}`));
-      clearInterval(countdownTimers.get(b._key));
-      countdownTimers.delete(b._key);
-      return;
-    }
 
     if (diff > 0 && diff <= TEN_MIN) {
       const warnRef = ref(db, `bosses/${b._key}/warned10m`);
