@@ -396,27 +396,6 @@ function createBossCard(b, sectionColor) {
     const isHourBoss = b.bossHour && b.bossHour !== "null";
     const isScheduleBoss = b.bossSchedule && b.bossSchedule !== "null";
 
-    /* 🔁 AUTO RESET (bossHour) */
-    if (
-      isHourBoss &&
-      !isScheduleBoss &&
-      diff <= -(estMinutes * 60000) &&
-      !b.cycleReset
-    ) {
-      const now = new Date(); 
-      const newNextSpawn = new Date(now + (b.bossHour * 60 * 60 * 1000));
-
-      await update(ref(db, `bosses/${b._key}`), {
-        lastKilled: now.toISOString(),
-        nextSpawn: newNextSpawn.toISOString(),
-        warned10m: false,
-        spawnedPinged: false,
-        cycleReset: true
-      });
-
-      b._ts = newNextSpawn.getTime();
-      b.cycleReset = true;
-    }
 
     /* ❌ AUTO REMOVE (bossSchedule) */
     if (
