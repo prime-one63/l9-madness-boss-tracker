@@ -61,7 +61,7 @@ navBossList.addEventListener("click", async () => {
    🔹 CONSTANTS
 ====================== */
 
-const DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1477526318202749090/Lxo07w40ZGx0U2uBOenVgxswG_RIBLOMpk-gfFIYh22Vc3Rwz6NpzdWIrLlnoWBzSfwB";
+const DISCORD_WEBHOOK = "";
 const TEN_MIN = 10 * 60000;
 const FIVE_MIN = 5 * 60000;
 
