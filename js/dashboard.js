@@ -261,7 +261,12 @@ async function fetchAndRenderBosses() {
       grid.style.overflow = "hidden";
       grid.style.transition = "max-height 0.4s ease, opacity 0.4s ease";
 
-      section.data.forEach(b => grid.appendChild(createBossCard(b, section.color)));
+      // Apply staggered fade-in effect to boss cards
+section.data.forEach((b, index) => {
+  const card = createBossCard(b, section.color);
+  card.style.animationDelay = `${index * 0.1}s`;
+  grid.appendChild(card);
+});
 
       header.addEventListener("click", () => {
         const collapsed = grid.classList.toggle("collapsed");
@@ -286,11 +291,12 @@ async function fetchAndRenderBosses() {
 function createBossCard(b, sectionColor) {
 
   const card = document.createElement("div");
-  card.className = "boss-tile";
+  card.className = "boss-tile fade-in";
   card.style.borderLeft = `6px solid ${sectionColor}`;
 
-  card.addEventListener("mouseenter", () => (card.style.transform = "scale(1.03)"));
-  card.addEventListener("mouseleave", () => (card.style.transform = "scale(1)"));
+  // Remove old mouseenter/mouseleave handlers as we're using CSS hover
+  // card.addEventListener("mouseenter", () => (card.style.transform = "scale(1.03)"));
+  // card.addEventListener("mouseleave", () => (card.style.transform = "scale(1)"));
 
   const bossImageMap = {
     VENATUS: "img/venatus.png",
@@ -460,11 +466,4 @@ timezoneSelect.addEventListener("change", () => {
 document.addEventListener("visibilitychange", () => {
   if (!document.hidden) fetchAndRenderBosses();
 });
-
-
-
-
-
-
-
 
