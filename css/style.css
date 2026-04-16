@@ -1,6 +1,69 @@
-body { 
-  background-color: #212529;
+body {
+  position: relative;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: linear-gradient(135deg, #0f0c29, #302b63, #24243e, #1a1a2e);
+  background-size: 500% 500%;
+  animation: gradientShift 20s ease infinite;
   color: #fff;
+  min-height: 100vh;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Galaxy starfield */
+body::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background:
+    radial-gradient(circle at 10% 20%, rgba(255,255,255,0.5) 1px, transparent 1%),
+    radial-gradient(circle at 30% 40%, rgba(255,255,255,0.4) 1px, transparent 1%),
+    radial-gradient(circle at 50% 80%, rgba(255,255,255,0.3) 1px, transparent 1%),
+    radial-gradient(circle at 70% 10%, rgba(255,255,255,0.2) 1px, transparent 1%),
+    radial-gradient(circle at 90% 30%, rgba(255,255,255,0.5) 1px, transparent 1%);
+  background-size: 200px 200px, 150px 150px, 100px 100px, 80px 80px, 120px 120px;
+  animation: moveStars 60s linear infinite;
+  opacity: 0.6;
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* Nebula swirl */
+body::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background:
+    radial-gradient(circle at 30% 30%, rgba(0,0,255,0.1) 0%, transparent 20%),
+    radial-gradient(circle at 70% 70%, rgba(255,0,255,0.1) 0%, transparent 20%);
+  background-size: 400px 400px;
+  animation: nebulaShift 30s ease-in-out infinite;
+  opacity: 0.4;
+  pointer-events: none;
+  z-index: -2;
+}
+
+@keyframes moveStars {
+  0% { background-position: 0 0; }
+  100% { background-position: 1000px 1000px; }
+}
+
+@keyframes nebulaShift {
+  0%, 100% { background-position: 0 0; }
+  50% { background-position: 200px 200px; }
+}
+
+/* Keep existing gradientShift animation */
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 /* ===================================
    🧭 Top Navigation Bar
@@ -245,6 +308,31 @@ p.countdown {
     width: 120px;
     font-size: 0.85rem;
   }
+}
+
+/* Custom scrollbar for webkit browsers */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255,255,255,0.1);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #007bff, #00d2ff);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #0056b3, #0099cc);
+}
+
+/* Firefox scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #007bff rgba(255,255,255,0.1);
 }
 
 
@@ -699,6 +787,180 @@ main {
   flex-wrap: wrap;
 }
 
+/* ===== MODERN ANIMATIONS & EFFECTS ===== */
+
+/* Pulse animation for important elements */
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+/* Shine effect for hover states */
+@keyframes shine {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* Floating animation for boss images */
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+}
+
+/* Spawn countdown pulse */
+@keyframes spawnPulse {
+  0% { opacity: 0.7; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.1); }
+  100% { opacity: 0.7; transform: scale(1); }
+}
+
+/* Enhanced boss tile animations */
+.boss-tile {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.boss-tile:hover {
+  transform: translateY(-5px) scale(1.04);
+  box-shadow: 0 12px 25px rgba(0, 0, 0, 0.3);
+  border-left-width: 8px;
+}
+
+.boss-tile:hover .boss-tile-img {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Add shine effect on hover */
+.boss-tile::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transition: left 0.5s;
+}
+
+.boss-tile:hover::before {
+  left: 100%;
+}
+
+/* Spawning boss animation */
+.boss-spawning {
+  animation: spawnPulse 1.5s ease-in-out infinite, pulse 2s infinite;
+  border-left-color: #ff3b3b !important;
+  border-left-width: 8px !important;
+}
+
+.boss-spawning .countdown {
+  animation: spawnPulse 1.5s ease-in-out infinite;
+}
+
+/* Soon spawning boss */
+.boss-soon {
+  animation: pulse 3s infinite;
+  border-left-color: #ffcc00 !important;
+  border-left-width: 8px !important;
+}
+
+/* Enhanced glass effect */
+.glass-effect {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(15px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+}
+
+/* Enhanced hover effects for buttons */
+.btn {
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+}
+
+.btn:active {
+  transform: translateY(0);
+}
+
+/* Loading skeleton effect */
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* Fade-in animation for sections */
+.fade-in {
+  opacity: 0;
+  transform: translateY(20px);
+  animation: fadeInUp 0.6s ease forwards;
+}
+
+.fade-in.delay-1 { animation-delay: 0.1s; }
+.fade-in.delay-2 { animation-delay: 0.2s; }
+.fade-in.delay-3 { animation-delay: 0.3s; }
+.fade-in.delay-4 { animation-delay: 0.4s; }
+
+@keyframes fadeInUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Enhanced badge animations */
+.guild-badge {
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.guild-badge:hover {
+  transform: scale(1.1) rotate(2deg);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+/* Section header hover effects */
+h2.section-header:hover {
+  background: rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+h2.section-header:hover span {
+  animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+/* Responsive enhancements */
+@media (max-width: 768px) {
+  .boss-tile {
+    margin: 8px 0;
+  }
+
+  .boss-tile:hover {
+    transform: translateY(-3px) scale(1.02);
+  }
+}
+
 .tracker-header{
     display:flex;
     align-items:center;
@@ -723,7 +985,3 @@ main {
     font-size:13px;
     opacity:0.8;
 }
-
-
-
-
